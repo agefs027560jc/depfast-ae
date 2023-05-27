@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 set -x -e
 
 sudo apt-get --assume-yes update
@@ -19,6 +20,7 @@ sudo apt-get --assume-yes install -y \
     python3-pip \
     python3-wheel \
     python3-setuptools \
+    python3-testresources \
     libjpeg-dev \
     zlib1g-dev \
     libgoogle-perftools-dev
@@ -26,6 +28,8 @@ sudo apt-get --assume-yes install -y \
 sudo wget https://github.com/mikefarah/yq/releases/download/v4.24.2/yq_linux_amd64 \
     -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
 
-pip3 install --upgrade dev pip wheel setuptools
+pip3 install --upgrade pip wheel setuptools
 pip3 install -r requirements.txt
 pip3 install Pillow matplotlib pyyaml
+
+: end
