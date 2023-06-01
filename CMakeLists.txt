@@ -158,10 +158,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREUSE_CORO")
 #    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/deptran/rcc_rpc.h
-           ${CMAKE_CURRENT_SOURCE_DIR}/src/deptran/rcc_rpc.py
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/rpcgen --cpp --python
-        src/deptran/rcc_rpc.rpc
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/deptran/rcc_rpc.h ${CMAKE_CURRENT_SOURCE_DIR}/src/deptran/rcc_rpc.py
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/rpcgen --cpp --python ${CMAKE_CURRENT_SOURCE_DIR}/src/deptran/rcc_rpc.rpc
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/deptran/rcc_rpc.rpc
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -252,6 +250,7 @@ add_executable(paxosbench
 
 
 add_dependencies(janusdb gen-rpc)
+add_dependencies(paxosbench gen-rpc)
 
 #add_executable(JANUS_PROCESS
 #        "deptran/empty.cc")

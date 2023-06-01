@@ -22,7 +22,8 @@ sudo apt-get --assume-yes install -y \
     libgoogle-perftools-dev \
     python3-testresources \
     cmake \
-    cmake-curses-gui
+    cmake-curses-gui \
+    ninja-build
 
 sudo wget https://github.com/mikefarah/yq/releases/download/v4.24.2/yq_linux_amd64 \
     -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
