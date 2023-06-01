@@ -1,0 +1,11 @@
+namespace exchange;
+
+struct msg {
+  string from;
+  string to;
+  string msg;
+};
+
+abstract service Exchange{
+  defer cast(msg content | string status);
+};

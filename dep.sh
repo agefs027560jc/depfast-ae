@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -x -e
 
-sudo apt-get --assume-yes update
+apt-get --assume-yes update
+apt-get --assume-yes upgrade
 
-sudo apt-get --assume-yes install -y \
+apt-get --assume-yes install -y \
     git \
     wget \
     silversearcher-ag \
@@ -23,7 +24,9 @@ sudo apt-get --assume-yes install -y \
     python3-testresources \
     libjpeg-dev \
     zlib1g-dev \
-    libgoogle-perftools-dev
+    libgoogle-perftools-dev \
+    cmake \
+    cmake-curses-gui
 
 sudo wget https://github.com/mikefarah/yq/releases/download/v4.24.2/yq_linux_amd64 \
     -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
