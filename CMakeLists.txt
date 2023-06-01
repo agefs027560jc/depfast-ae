@@ -1,7 +1,8 @@
 # ubuntu 16.04 has cmake 3.5
 cmake_minimum_required(VERSION 3.5)
 
-
+# multiline disables hunter
+if(FALSE)
 # use hunter instead of conan
 include("HunterGate.cmake")
 
@@ -22,7 +23,7 @@ elseif(APPLE)
             SHA1 "017e688b9848c1f695303e8cfe9f35d40e154112"
     )
 endif()
-
+endif()
 
 
 set(
@@ -44,13 +45,13 @@ pkg_check_modules(PYTHON REQUIRED python3)
 #pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
 
 
-hunter_add_package(Boost COMPONENTS system filesystem coroutine context thread)
-hunter_add_package(GTest)
+#hunter_add_package(Boost COMPONENTS system filesystem coroutine context thread)
+#hunter_add_package(GTest)
 #hunter_add_package(GSL)
 
 find_package(Boost CONFIG REQUIRED
         system filesystem coroutine context thread)
-find_package(GTest CONFIG REQUIRED)
+#find_package(GTest CONFIG REQUIRED)
 #find_package(GSL CONFIG REQUIRED)
 
 include_directories(
@@ -255,8 +256,8 @@ add_dependencies(janusdb gen-rpc)
 #add_executable(JANUS_PROCESS
 #        "deptran/empty.cc")
 
-add_executable(TEST
-        "test/coroutine.cc")
+#add_executable(TEST
+#        "test/coroutine.cc")
 
 target_link_libraries(
         MEMDB
@@ -304,7 +305,7 @@ target_link_libraries(
 #)
 
 target_link_libraries(
-        TEST
+#        TEST
         RRR
 #        GTest::main
 #        GTest::gtest
