@@ -183,6 +183,7 @@ include_directories(
     ${PYTHON_INCLUDE_DIRS}
     src
     src/rrr
+    src/rrr/rpc
     src/memdb
     src/deptran
     dependencies/yaml-cpp/include
@@ -231,6 +232,15 @@ file(GLOB DEPTRAN_SRC
     "src/deptran/*/*.h"
 )
 
+file(GLOB MICROBENCH_SRC
+    "src/*.h"
+    "src/*.cc"
+    "src/deptran/*.h"
+    "src/deptran/*.cc"
+    "src/deptran/*/*.cc"
+    "src/deptran/*/*.h"
+)
+
 list(FILTER DEPTRAN_SRC EXCLUDE REGEX
         "src/deptran/s_main.cc"
 )
@@ -254,6 +264,12 @@ add_executable(deptran_server
         ${DEPTRAN_SRC}
         ${BENCH_SRC})
 
+add_executable(microbench
+        "src/run.cc"
+        "src/deptran/paxos_main_helper.cc"
+        ${BENCH_SRC}
+        ${MICROBENCH_SRC})
+
 #add_executable(janusdb
 #        "src/deptran/s_main.cc"
 #        ${DEPTRAN_SRC}
@@ -267,6 +283,7 @@ add_executable(deptran_server
 
 
 add_dependencies(deptran_server gen-rpc)
+add_dependencies(microbench gen-rpc)
 #add_dependencies(janusdb gen-rpc)
 #add_dependencies(paxosbench gen-rpc)
 
@@ -278,6 +295,24 @@ add_dependencies(deptran_server gen-rpc)
 
 target_link_libraries(
         deptran_server
+        RRR
+        MEMDB
+        EXTERN_C
+        YAMLCPP
+        ${RT}
+        JANUS
+#        ${CONAN_LIBS}
+        ${Boost_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${PYTHON_LIBRARIES}
+#    ${APR_LIBRARIES}
+#    ${APRUTIL_LIBRARIES}
+#    ${PROFILER_LIBRARIES}
+     "-Wl,--whole-archive -Wl,--no-whole-archive -lpthread -lnuma -ldl -libverbs -lmlx4 -lmlx5"
+)
+
+target_link_libraries(
+        microbench
         RRR
         MEMDB
         EXTERN_C
