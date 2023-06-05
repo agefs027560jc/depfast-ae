@@ -36,10 +36,14 @@ RUN wget https://github.com/mikefarah/yq/releases/download/v4.24.2/yq_linux_amd6
 # COPY gitconfig /root/.gitconfig
 
 WORKDIR "/root"
-RUN git clone --recursive https://github.com/stonysystems/depfast-ae.git depfast
+RUN git clone --recursive https://github.com/agefs027560jc/depfast-ae.git depfast
 
 WORKDIR "/root/depfast"
 # install dependencies
-RUN git checkout atc_ae
-RUN pip3 install -r requirements.txt
-RUN python3 waf configure build
+RUN git checkout test-pyrpc
+RUN bash dep.sh
+RUN cmake -G Ninja -S. -H. -B ./build
+RUN cmake --build ./build
+RUN git clone https://github.com/agefs027560jc/didactic-octo-couscous.git sample
+#RUN pip3 install -r requirements.txt
+#RUN python3 waf configure build
