@@ -11,7 +11,7 @@ RUN apt-get clean && \
 # install basic libraries
 RUN apt-get --assume-yes update
 
-RUN apt-get --assume-yes install -y \
+RUN apt-get --assume-yes install \
     git \
     wget \
     silversearcher-ag \
@@ -38,10 +38,6 @@ RUN apt-get --assume-yes install -y \
 
 RUN wget https://github.com/mikefarah/yq/releases/download/v4.24.2/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq
 
-RUN pip3 install --upgrade pip wheel setuptools testresources
-RUN pip3 install -r requirements.txt
-RUN pip3 install Pillow matplotlib pyyaml
-
 # copy .gitconfig (For the permission)
 # COPY gitconfig /root/.gitconfig
 
@@ -51,6 +47,9 @@ RUN git clone --recursive https://github.com/agefs027560jc/depfast-ae.git depfas
 WORKDIR "/root/depfast"
 # install dependencies
 RUN git checkout test-pyrpc
+RUN pip3 install --upgrade pip wheel setuptools testresources
+RUN pip3 install -r requirements.txt
+RUN pip3 install Pillow matplotlib pyyaml
 RUN cmake -G Ninja -S. -H. -B ./build
 RUN cmake --build ./build
 RUN git clone https://github.com/agefs027560jc/didactic-octo-couscous.git sample
