@@ -260,16 +260,16 @@ add_executable(deptran_server
 #        ${DEPTRAN_SRC}
 #        ${BENCH_SRC})
 
-add_executable(paxosbench
-        "src/run.cc"
-        "src/deptran/paxos_main_helper.cc"
-        ${DEPTRAN_SRC}
-        ${BENCH_SRC})
+#add_executable(paxosbench
+#        "src/run.cc"
+#        "src/deptran/paxos_main_helper.cc"
+#        ${DEPTRAN_SRC}
+#        ${BENCH_SRC})
 
 
 add_dependencies(deptran_server gen-rpc)
 #add_dependencies(janusdb gen-rpc)
-add_dependencies(paxosbench gen-rpc)
+#add_dependencies(paxosbench gen-rpc)
 
 #add_executable(JANUS_PROCESS
 #        "deptran/empty.cc")
@@ -295,6 +295,8 @@ target_link_libraries(
      "-Wl,--whole-archive -Wl,--no-whole-archive -lpthread -lnuma -ldl -libverbs -lmlx4 -lmlx5"
 )
 
+if(MYTEST)
+
 target_link_libraries(
         paxosbench
         RRR
@@ -312,8 +314,6 @@ target_link_libraries(
         #    ${PROFILER_LIBRARIES}
      "-Wl,--whole-archive -Wl,--no-whole-archive -lpthread -lnuma -ldl -libverbs -lmlx4 -lmlx5"
 )
-
-if(MYTEST)
 
 target_link_libraries(
         MEMDB
