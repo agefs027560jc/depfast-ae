@@ -134,8 +134,8 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-register -Wno-error")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnuma -ldl -lgflags -ldl -libverbs -lmlx4 -lmlx5")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I /home/users/vyip/depfast-ae/eRPC/src -DERPC_INFINIBAND=true -march=native -I /usr/include/dpdk -DERPC_LOG_LEVEL=6 -DERPC_TESTING=false -DGFLAGS_IS_A_DLL=0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnuma -ldl -libverbs -lmlx4 -lmlx5")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_IPC")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCHECK_ISO")
@@ -185,7 +185,6 @@ include_directories(
     src/rrr
     src/memdb
     src/deptran
-    /usr/include/dpdk
     dependencies/yaml-cpp/include
 )
 
@@ -292,7 +291,7 @@ target_link_libraries(
 #    ${APR_LIBRARIES}
 #    ${APRUTIL_LIBRARIES}
 #    ${PROFILER_LIBRARIES}
-     "-Wl,--whole-archive -ldpdk -Wl,--no-whole-archive -lpthread -lnuma -ldl -lgflags -ldl -libverbs -lmlx4 -lmlx5"
+     "-Wl,--whole-archive -Wl,--no-whole-archive -lpthread -lnuma -ldl -libverbs -lmlx4 -lmlx5"
 )
 
 if(MYTEST)
