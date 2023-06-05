@@ -295,7 +295,7 @@ target_link_libraries(
      "-Wl,--whole-archive -ldpdk -Wl,--no-whole-archive -lpthread -lnuma -ldl -lgflags -ldl -libverbs -lmlx4 -lmlx5"
 )
 
-if(${MYTEST})
+if(MYTEST)
 
 target_link_libraries(
         MEMDB
