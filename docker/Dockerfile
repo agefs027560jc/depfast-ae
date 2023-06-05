@@ -54,5 +54,6 @@ RUN cmake -G Ninja -S. -H. -B ./build
 RUN ./bin/rpcgen --cpp --python src/deptran/rcc_rpc.rpc
 RUN cmake --build ./build
 RUN git clone https://github.com/agefs027560jc/didactic-octo-couscous.git sample
+RUN mkdir /db
 #RUN pip3 install -r requirements.txt
 #RUN python3 waf configure build
