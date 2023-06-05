@@ -1,8 +1,9 @@
 # ubuntu 16.04 has cmake 3.5
 cmake_minimum_required(VERSION 3.5)
+set(MYTEST 0)
 
 # multiline disables hunter
-if(FALSE)
+if(MYTEST)
 # use hunter instead of conan
 include("HunterGate.cmake")
 
@@ -23,7 +24,6 @@ elseif(APPLE)
             SHA1 "017e688b9848c1f695303e8cfe9f35d40e154112"
     )
 endif()
-endif()
 
 
 set(
@@ -33,11 +33,21 @@ set(
         FILEPATH
         "Default toolchain"
 )
+endif()
 
 project(janus)
 
 # Hunter disallows using (cmake_)cxx_standard, use toolchain instead.
 set (CMAKE_CXX_STANDARD 14)
+
+SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/.../boost")
+SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "/.../boost/lib")
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+set(Boost_NO_BOOST_CMAKE ON)
+find_package(Boost COMPONENTS system filesystem context thread coroutine REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(Threads)
 find_package(PkgConfig REQUIRED)
@@ -49,8 +59,8 @@ pkg_check_modules(PYTHON REQUIRED python3)
 #hunter_add_package(GTest)
 #hunter_add_package(GSL)
 
-find_package(Boost CONFIG REQUIRED
-        system filesystem coroutine context thread)
+#find_package(Boost CONFIG REQUIRED
+#        system filesystem coroutine context thread)
 #find_package(GTest CONFIG REQUIRED)
 #find_package(GSL CONFIG REQUIRED)
 
@@ -124,6 +134,8 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-register -Wno-error")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnuma -ldl -lgflags -ldl -libverbs -lmlx4 -lmlx5")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I /home/users/vyip/depfast-ae/eRPC/src -DERPC_INFINIBAND=true -march=native -I /usr/include/dpdk -DERPC_LOG_LEVEL=6 -DERPC_TESTING=false -DGFLAGS_IS_A_DLL=0")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_IPC")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCHECK_ISO")
@@ -173,6 +185,7 @@ include_directories(
     src/rrr
     src/memdb
     src/deptran
+    /usr/include/dpdk
     dependencies/yaml-cpp/include
 )
 
@@ -233,30 +246,56 @@ add_library(RRR
 add_library(MEMDB
     ${MEMDB_SRC})
 
-#add_library(JANUS
-#        ${DEPTRAN_SRC}
-#        ${BENCH_SRC})
+add_library(JANUS
+        ${DEPTRAN_SRC}
+        ${BENCH_SRC})
 
-add_executable(janusdb
+add_executable(deptran_server
         "src/deptran/s_main.cc"
         ${DEPTRAN_SRC}
         ${BENCH_SRC})
 
-add_executable(paxosbench
-        "src/run.cc"
-        "src/deptran/paxos_main_helper.cc"
-        ${DEPTRAN_SRC}
-        ${BENCH_SRC})
+#add_executable(janusdb
+#        "src/deptran/s_main.cc"
+#        ${DEPTRAN_SRC}
+#        ${BENCH_SRC})
+
+#add_executable(paxosbench
+#        "src/run.cc"
+#        "src/deptran/paxos_main_helper.cc"
+#        ${DEPTRAN_SRC}
+#        ${BENCH_SRC})
 
 
-add_dependencies(janusdb gen-rpc)
-add_dependencies(paxosbench gen-rpc)
+add_dependencies(deptran_server gen-rpc)
+#add_dependencies(janusdb gen-rpc)
+#add_dependencies(paxosbench gen-rpc)
 
 #add_executable(JANUS_PROCESS
 #        "deptran/empty.cc")
 
 #add_executable(TEST
 #        "test/coroutine.cc")
+
+target_link_libraries(
+        deptran_server
+        RRR
+        MEMDB
+        EXTERN_C
+        YAMLCPP
+        ${RT}
+        JANUS
+#        ${CONAN_LIBS}
+        ${Boost_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${PYTHON_LIBRARIES}
+#    ${APR_LIBRARIES}
+#    ${APRUTIL_LIBRARIES}
+#    ${PROFILER_LIBRARIES}
+     "-Wl,--whole-archive -ldpdk -Wl,--no-whole-archive -lpthread -lnuma -ldl -lgflags -ldl -libverbs -lmlx4 -lmlx5"
+)
+
+if(${MYTEST})
 
 target_link_libraries(
         MEMDB
@@ -313,3 +352,4 @@ target_link_libraries(
 #        ${CONAN_LIBS}
         ${CMAKE_THREAD_LIBS_INIT}
 )
+endif()
