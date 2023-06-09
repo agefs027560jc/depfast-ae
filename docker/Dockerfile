@@ -34,7 +34,8 @@ RUN apt-get --assume-yes install \
     python3-testresources \
     cmake \
     cmake-curses-gui \
-    ninja-build
+    ninja-build \
+    libsnappy-dev
 
 RUN wget https://github.com/mikefarah/yq/releases/download/v4.24.2/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq
 

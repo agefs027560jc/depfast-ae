@@ -24,7 +24,7 @@ elseif(APPLE)
             SHA1 "017e688b9848c1f695303e8cfe9f35d40e154112"
     )
 endif()
-
+endif()
 
 set(
         CMAKE_TOOLCHAIN_FILE
@@ -33,7 +33,6 @@ set(
         FILEPATH
         "Default toolchain"
 )
-endif()
 
 project(janus)
 
@@ -114,7 +113,7 @@ endif()
 add_library(
         EXTERN_C
         extern_interface/scheduler.c
-        extern_interface/scheduler.h
+        #extern_interface/scheduler.h
 )
 
 # yaml
@@ -133,11 +132,11 @@ add_library(YAMLCPP
 set(CMAKE_VERBOSE_MAKEFILE on)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -pthread -O2 -DNDEBUG -DLOG_INFO")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -lpthread -O2 -DNDEBUG -DLOG_INFO")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-register -Wno-error")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reorder -Wno-comment -Wno-unused-function -Wno-unused-variable -Wno-sign-compare")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reorder -Wno-comment -Wno-unused-function -Wno-unused-variable -Wno-sign-compare")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnuma -ldl -libverbs -lmlx4 -lmlx5")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_IPC")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_IPC")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCHECK_ISO")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDB_CHECKSUM")
@@ -149,13 +148,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDB_CHECKSUM")
 #pkg_check_modules(PROFILER REQUIRED libprofiler)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG_CODE")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG_CHECK")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG_CHECK")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEVENT_TIMEOUT_CHECK")
 set(CMAKE_CXX_FLAGS_RELEASE  "${CMAKE_CXX_FLAGS_RELEASE} -DLOG_LEVEL_AS_INFO")
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DLOG_LEVEL_AS_DEBUG")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCPU_PROFILE")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fsanitize=leak")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULATE_WAN")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DLOG_LEVEL_AS_DEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCPU_PROFILE")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULATE_WAN")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fsanitize=leak")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREUSE_CORO")
 
 #FIND_LIBRARY (DMALLOC_LIBRARY dmalloc /usr/lib /sw/lib)
@@ -202,36 +201,36 @@ link_directories(
 
 
 file(GLOB RRR_SRC
-    "src/rrr/base/*.hpp"
+    #"src/rrr/base/*.hpp"
     "src/rrr/base/*.cpp"
-    "src/rrr/misc/*.hpp"
+    #"src/rrr/misc/*.hpp"
     "src/rrr/misc/*.cpp"
-    "src/rrr/reactor/*.h"
+    #"src/rrr/reactor/*.h"
     "src/rrr/reactor/*.cc"
 #    "rrr/mq/*.cpp"
 #    "rrr/mq/*.h"
     "src/rrr/pylib/simplerpc/_pyrpc.cpp"
     "src/rrr/rpc/*.cpp"
-    "src/rrr/rpc/*.hpp"
-    "src/rrr/utils/*.h"
-    "src/rrr/rrr.h"
-    "src/rrr/rrr.hpp"
+    #"src/rrr/rpc/*.hpp"
+    #"src/rrr/utils/*.h"
+    #"src/rrr/rrr.h"
+    #src/rrr/rrr.hpp"
 )
 
 file(GLOB MEMDB_SRC
-    "src/memdb/*.h"
+    #"src/memdb/*.h"
     "src/memdb/*.cc")
 
 file(GLOB BENCH_SRC
-    "src/bench/*/*.h"
+    #"src/bench/*/*.h"
     "src/bench/*/*.cc"
 )
 
 file(GLOB DEPTRAN_SRC
-    "src/deptran/*.h"
+    #"src/deptran/*.h"
     "src/deptran/*.cc"
     "src/deptran/*/*.cc"
-    "src/deptran/*/*.h"
+    #"src/deptran/*/*.h"
 )
 
 list(FILTER DEPTRAN_SRC EXCLUDE REGEX
@@ -294,7 +293,7 @@ target_link_libraries(
 #    ${APR_LIBRARIES}
 #    ${APRUTIL_LIBRARIES}
 #    ${PROFILER_LIBRARIES}
-     "-Wl,--whole-archive -Wl,--no-whole-archive -lpthread -lnuma -ldl -libverbs -lmlx4 -lmlx5 -fPIC -Wl,--no-as-needed -lsnappy -ltcmalloc -ljemalloc -Wl,--as-needed"
+     "-Wl,--whole-archive -Wl,--no-whole-archive -lpthread -lnuma -ldl -libverbs -lmlx4 -lmlx5 -lsnappy -ltcmalloc -ljemalloc"
 )
 
 if(MYTEST)
