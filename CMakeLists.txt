@@ -137,7 +137,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -pthread -O2 -DNDEBUG -DLOG_INFO")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-register -Wno-error")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reorder -Wno-comment -Wno-unused-function -Wno-unused-variable -Wno-sign-compare")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnuma -ldl -libverbs -lmlx4 -lmlx5")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ltcmalloc -ljemalloc")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_IPC")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCHECK_ISO")
@@ -295,7 +294,7 @@ target_link_libraries(
 #    ${APR_LIBRARIES}
 #    ${APRUTIL_LIBRARIES}
 #    ${PROFILER_LIBRARIES}
-     "-Wl,--whole-archive -Wl,--no-whole-archive -lpthread -lnuma -ldl -libverbs -lmlx4 -lmlx5"
+     "-Wl,--whole-archive -Wl,--no-whole-archive -lpthread -lnuma -ldl -libverbs -lmlx4 -lmlx5 -fPIC -Wl,--no-as-needed -lsnappy -ltcmalloc -ljemalloc -Wl,--as-needed"
 )
 
 if(MYTEST)
