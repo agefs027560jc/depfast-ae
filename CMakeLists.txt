@@ -152,7 +152,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG_CHECK")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEVENT_TIMEOUT_CHECK")
 set(CMAKE_CXX_FLAGS_RELEASE  "${CMAKE_CXX_FLAGS_RELEASE} -DLOG_LEVEL_AS_INFO")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DLOG_LEVEL_AS_DEBUG")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCPU_PROFILE")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCPU_PROFILE")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULATE_WAN")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fsanitize=leak")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREUSE_CORO")
@@ -174,12 +174,12 @@ find_package(rrr QUIET)
 if (NOT rrr_FOUND)
   message("RRR not found, initializing git submodule")
   execute_process(
-    COMMAND git submodule add --branch cmake-sep https://github.com/agefs027560jc/RRR src/rrr
+    COMMAND git submodule add --branch non-cmake https://github.com/agefs027560jc/RRR src/rrr
     COMMAND git submodule update --init -- src/rrr
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/rpcgen --cpp --python ${CMAKE_CURRENT_SOURCE_DIR}/src/deptran/rcc_rpc.rpc
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_subdirectory(src/rrr)
 endif()
 
 add_custom_command(

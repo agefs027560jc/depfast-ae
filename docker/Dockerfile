@@ -51,9 +51,14 @@ RUN git checkout cmake-sep
 RUN pip3 install --upgrade pip wheel setuptools testresources
 RUN pip3 install -r requirements.txt --ignore-installed
 RUN pip3 install Pillow matplotlib pyyaml
-RUN cmake -G Ninja -S. -H. -B ./build
-RUN ./bin/rpcgen --cpp --python src/deptran/rcc_rpc.rpc
-RUN cmake --build ./build
 RUN git clone https://github.com/agefs027560jc/didactic-octo-couscous.git sample
+
+# workaround
+#RUN ./bin/rpcgen --cpp --python src/deptran/rcc_rpc.rpc
 RUN mkdir /db
+
+# choose build env
+#RUN cmake -G Ninja -S. -H. -B ./build
+#RUN cmake --build ./build
+
 #RUN python3 waf configure build
