@@ -47,7 +47,7 @@ RUN git clone --recursive https://github.com/agefs027560jc/depfast-ae.git depfas
 
 WORKDIR "/root/depfast"
 # install dependencies
-RUN git checkout test-pyrpc
+RUN git checkout cmake-sep
 RUN pip3 install --upgrade pip wheel setuptools testresources
 RUN pip3 install -r requirements.txt --ignore-installed
 RUN pip3 install Pillow matplotlib pyyaml
