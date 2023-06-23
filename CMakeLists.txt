@@ -170,6 +170,18 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREUSE_CORO")
 #    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/deptran/mdcc/mdcc_rpc.rpc
 #    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+find_package(rrr QUIET)
+if (NOT rrr_FOUND)
+  message("RRR not found, initializing git submodule")
+  execute_process(
+    COMMAND git submodule add --branch cmake-sep https://github.com/agefs027560jc/RRR src/rrr
+    COMMAND git submodule update --init -- src/rrr
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_subdirectory(src/rrr)
+endif()
+
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/deptran/rcc_rpc.h ${CMAKE_CURRENT_SOURCE_DIR}/src/deptran/rcc_rpc.py
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/rpcgen --cpp --python ${CMAKE_CURRENT_SOURCE_DIR}/src/deptran/rcc_rpc.rpc
@@ -201,20 +213,20 @@ link_directories(
 
 
 file(GLOB RRR_SRC
-    #"src/rrr/base/*.hpp"
+    "src/rrr/base/*.hpp"
     "src/rrr/base/*.cpp"
-    #"src/rrr/misc/*.hpp"
+    "src/rrr/misc/*.hpp"
     "src/rrr/misc/*.cpp"
-    #"src/rrr/reactor/*.h"
-    "src/rrr/reactor/*.cc"
 #    "rrr/mq/*.cpp"
 #    "rrr/mq/*.h"
+    "src/rrr/reactor/*.h"
+    "src/rrr/reactor/*.cc"
     "src/rrr/pylib/simplerpc/_pyrpc.cpp"
     "src/rrr/rpc/*.cpp"
-    #"src/rrr/rpc/*.hpp"
-    #"src/rrr/utils/*.h"
-    #"src/rrr/rrr.h"
-    #src/rrr/rrr.hpp"
+    "src/rrr/rpc/*.hpp"
+    "src/rrr/utils/*.h"
+    "src/rrr/rrr.h"
+    "src/rrr/rrr.hpp"
 )
 
 file(GLOB MEMDB_SRC
