@@ -176,7 +176,6 @@ if (NOT rrr_FOUND)
   execute_process(
     COMMAND git submodule add --branch non-cmake https://github.com/agefs027560jc/RRR src/rrr
     COMMAND git submodule update --init -- src/rrr
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/rpcgen --cpp --python ${CMAKE_CURRENT_SOURCE_DIR}/src/deptran/rcc_rpc.rpc
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
