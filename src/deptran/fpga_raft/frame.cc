@@ -4,7 +4,7 @@
 #include "exec.h"
 #include "coordinator.h"
 #include "server.h"
-#include "service.h"
+#include "../gen-cpp/FpgaRaft.h"
 #include "commo.h"
 #include "config.h"
 
