@@ -35,7 +35,8 @@ RUN apt-get --assume-yes install \
     cmake \
     cmake-curses-gui \
     ninja-build \
-    libsnappy-dev
+    libsnappy-dev \
+    libtool flex bison libssl-dev
 
 RUN wget https://github.com/mikefarah/yq/releases/download/v4.24.2/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq
 
@@ -62,3 +63,14 @@ RUN mkdir /db
 #RUN cmake --build ./build
 
 #RUN python3 waf configure build
+
+WORKDIR "/root"
+RUN git clone https://github.com/apache/thrift
+
+WORKDIR "/root/thrift"
+RUN ./bootstrap.sh
+RUN ./configure CPPFLAGS='-O2' CFLAGS='' CXXFLAGS=''
+RUN make
+RUN make install
+
+WORKDIR "/root"

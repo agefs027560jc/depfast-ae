@@ -229,19 +229,19 @@ file(GLOB RRR_SRC
 )
 
 file(GLOB MEMDB_SRC
-    #"src/memdb/*.h"
+    "src/memdb/*.h"
     "src/memdb/*.cc")
 
 file(GLOB BENCH_SRC
-    #"src/bench/*/*.h"
+    "src/bench/*/*.h"
     "src/bench/*/*.cc"
 )
 
 file(GLOB DEPTRAN_SRC
-    #"src/deptran/*.h"
+    "src/deptran/*.h"
     "src/deptran/*.cc"
     "src/deptran/*/*.cc"
-    #"src/deptran/*/*.h"
+    "src/deptran/*/*.h"
 )
 
 list(FILTER DEPTRAN_SRC EXCLUDE REGEX
