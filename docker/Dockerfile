@@ -60,6 +60,7 @@ RUN mkdir /db
 
 # choose build env
 #RUN cmake -G Ninja -S. -H. -B ./build
+#RUN ./src/rrr/bin/rpcgen src/deptran/rcc_rpc.rpc
 #RUN cmake --build ./build
 
 #RUN python3 waf configure build
