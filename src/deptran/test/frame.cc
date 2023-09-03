@@ -2,9 +2,9 @@
 #include "../constants.h"
 #include "frame.h"
 #include "coordinator.h"
-#include "commo.h"
-#include "service.h"
 #include "server.h"
+#include "service.h"
+#include "commo.h"
 
 namespace janus {
 

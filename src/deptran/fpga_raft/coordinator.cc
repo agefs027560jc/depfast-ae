@@ -63,7 +63,7 @@ void CoordinatorFpgaRaft::Submit(shared_ptr<Marshallable>& cmd,
   verify(cmd_->kind_ != MarshallDeputy::UNKNOWN);
   commit_callback_ = func;
   GotoNextPhase();
-  // Log_info("*** returning from void CoordinatorFpgaRaft::Submit");
+  Log_info("*** returning from void CoordinatorFpgaRaft::Submit");
 }
 
 void CoordinatorFpgaRaft::AppendEntries() {
@@ -140,9 +140,9 @@ void CoordinatorFpgaRaft::AppendEntries() {
 
 		struct timespec start_, end_;
 		clock_gettime(CLOCK_MONOTONIC, &start_);
-    // Log_info("=== waiting for quorum");
+    Log_info("=== waiting for quorum");
     sp_quorum->Wait();
-    // Log_info("*** quorum reached");
+    Log_info("*** quorum reached");
 		// struct timespec end_;
 		clock_gettime(CLOCK_MONOTONIC, &end_);
 
@@ -206,7 +206,7 @@ void CoordinatorFpgaRaft::AppendEntries() {
     else {
         verify(0);
     }
-    // // Log_info("*** returning from void CoordinatorFpgaRaft::AppendEntries");
+    Log_info("*** returning from void CoordinatorFpgaRaft::AppendEntries");
 }
 
 void CoordinatorFpgaRaft::Commit() {
@@ -249,7 +249,7 @@ void CoordinatorFpgaRaft::GotoNextPhase() {
   switch (current_phase) {
     case Phase::INIT_END:
       if (IsLeader()) {
-        // Log_info("*** inside GotoNextPhase->INIT_END->IsLeader()");
+        Log_info("*** inside GotoNextPhase->INIT_END->IsLeader()");
         phase_++; // skip prepare phase for "leader"
         verify(phase_ % n_phase == Phase::ACCEPT);
         AppendEntries();
@@ -263,7 +263,7 @@ void CoordinatorFpgaRaft::GotoNextPhase() {
         phase_ = Phase::COMMIT;
       }
     case Phase::ACCEPT:
-      // // Log_info("*** inside GotoNextPhase->ACCEPT");
+      Log_info("*** inside GotoNextPhase->ACCEPT");
       verify(phase_ % n_phase == Phase::COMMIT);
       if (committed_) {
         LeaderLearn();
@@ -274,17 +274,19 @@ void CoordinatorFpgaRaft::GotoNextPhase() {
       }
       break;
     case Phase::PREPARE:
-      // Log_info("*** inside GotoNextPhase->PREPARE");
+      Log_info("*** inside GotoNextPhase->PREPARE");
       verify(phase_ % n_phase == Phase::ACCEPT);
       AppendEntries();
       break;
     case Phase::COMMIT:
-      // // Log_info("*** inside GotoNextPhase->COMMIT");
+      Log_info("*** inside GotoNextPhase->COMMIT");
       // do nothing.
       break;
     default:
+      Log_info("*** inside GotoNextPhase->DEFAULT");
       verify(0);
   }
+  Log_info("*** returning from CoordinatorFpgaRaft::GotoNextPhase");
 }
 
 } // namespace janus

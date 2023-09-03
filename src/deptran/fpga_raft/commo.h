@@ -108,7 +108,7 @@ class FpgaRaftAppendQuorumEvent: public QuorumEvent {
     void FeedResponse(bool appendOK, uint64_t index, std::string ip_addr = "") {
         // Log_info("==== inside FpgaRaftAppendQuorumEvent:FeedResponse");
         if (appendOK) {
-          // Log_info("==== inside FpgaRaftAppendQuorumEvent:FeedRespons; checkpoint 0");
+          Log_info("==== inside FpgaRaftAppendQuorumEvent:FeedRespons; checkpoint 0");
             if ((n_voted_yes_ == 0) && (n_voted_no_ == 0)){
                 // Log_info("==== inside FpgaRaftAppendQuorumEvent:FeedRespons; checkpoint 00");
                 minIndex = index;

@@ -334,6 +334,7 @@ FpgaRaftCommo::crpc_ring_BroadcastAppendEntries(parid_t par_id,
 	  if (p.first == leader_site_id) {
         // fix the 1c1s1p bug
         // Log_info("leader_site_id %d", leader_site_id);
+        // Log_info("leader_site_id %d", leader_site_id);
         e->FeedResponse(true, prevLogIndex + 1, ip);
         continue;
     }

@@ -1,7 +1,11 @@
-#include "../__dep__.h"
-#include "../constants.h"
 #include "commo.h"
-#include "server.h"
+#include "../rcc/graph.h"
+#include "../rcc/graph_marshaler.h"
+#include "../command.h"
+#include "../procedure.h"
+#include "../command_marshaler.h"
+#include "../rcc_rpc.h"
+
 
 namespace janus {
 
@@ -61,14 +65,14 @@ shared_ptr<ChainQuorumEvent> TestCommo::cRPC(parid_t par_id, siteid_t leader_sit
     if (p.first == leader_site_id) {
       // fix the 1c1s1p bug
       // Log_info("leader_site_id %d", leader_site_id);
-      // e->FeedResponse(true, prevLogIndex + 1, ip);
+      e->FeedResponse(true, 1, ip);
       continue;
     }
 
     MarshallDeputy md(cmd);
     verify(md.sp_data_ != nullptr);
-    outbound++;
-    DepId di;
+    // outbound++;
+    // DepId di;
     // di.str = "dep";
     // di.id = dep_id;
 
@@ -99,7 +103,7 @@ shared_ptr<ChainQuorumEvent> TestCommo::cRPC(parid_t par_id, siteid_t leader_sit
     //   Log_info("*** inside fuattr.callback, response received; tid is %d", gettid());
     // };
     // just call cRPC something with the above paramters, and no other changes
-    auto f = proxy->async_cRPCSVC(crpc_id, sitesInfo_, md); // this can definitely be pushed into the cRPC function below // #profile (crpc2) - 2.05%
+    auto f = proxy->async_cRPCSVC(crpc_id, md, sitesInfo_, state); // this can definitely be pushed into the cRPC function below // #profile (crpc2) - 2.05%
     Future::safe_release(f);
 
     // this too should be abstracted
@@ -114,10 +118,10 @@ shared_ptr<ChainQuorumEvent> TestCommo::cRPC(parid_t par_id, siteid_t leader_sit
   return e;
 }
 
-void TestCommo::cRPC2(const uint64_t& id, const std::vector<uint16_t>& addrChain, const MarshallDeputy& cmd) {
+void TestCommo::cRPC2(const uint64_t& id, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const std::vector<AppendEntriesResult>& state) {
   Log_info("@@@ Test CP 13: TestCommo::cRPC2");
   auto proxy = (TestProxy *)rpc_proxies_[addrChain[0]];
-  auto f = proxy->async_cRPCSVC(id, addrChain, cmd);
+  auto f = proxy->async_cRPCSVC(id, cmd, addrChain, state);
   Future::safe_release(f);
 }
 

@@ -516,10 +516,12 @@ void FpgaRaftServer::StartTimer()
     for (slotid_t id = executeIndex + 1; id <= commitIndex; id++) {
         auto next_instance = GetFpgaRaftInstance(id);
         if (next_instance->log_) {
-            Log_debug("fpga-raft par:%d loc:%d executed slot %lx now", partition_id_, loc_id_, id);
+            Log_info("@@@ FpgaRaft CP 56A: FpgaRaftServer::OnCommit");
+            Log_info("fpga-raft par:%d loc:%d executed slot %lx now", partition_id_, loc_id_, id);
             app_next_(*next_instance->log_);
             executeIndex++;
         } else {
+            Log_info("@@@ FpgaRaft CP 56B: FpgaRaftServer::OnCommit");
             break;
         }
     }
@@ -657,12 +659,14 @@ void FpgaRaftServer::StartTimer()
         // auto st = dynamic_pointer_cast<AppendEntriesCommandState>(state.sp_data_);   // #profile - 0.54%
         for (auto el : state)
         {
-          // Log_info("inside FpgaRaftServer::OnCRPC2; checkpoint 3 @ %d", gettid());
           bool y = ((el.followerAppendOK == 1) && (this->IsLeader()) && (currentTerm == el.followerCurrentTerm));
+          Log_info("inside FpgaRaftServer::OnCRPC2; checkpoint 3 @ %d", gettid());
+          Log_info("currentTerm: %d; followerCurrentTerm: %d;", currentTerm, el.followerCurrentTerm);
+          Log_info("followerLastLogIndex: %d; FeedResponse: %d", el.followerLastLogIndex, y);
           ev->FeedResponse(y, el.followerLastLogIndex);
         }
         // Log_info("inside FpgaRaftServer::OnCRPC2; checkpoint 4 @ %d", gettid());
-        // Log_info("==== returning from cRPC");
+        Log_info("==== returning from cRPC");
         return;
     }
 
