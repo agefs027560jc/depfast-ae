@@ -26,7 +26,6 @@ void TestServer::cRPCSRV(const uint64_t& id, const MarshallDeputy& cmd, const st
   Log_info("==== inside void TestServer::cRPCSRV; counter: %ld; tid is: %d", toyCounter, gettid());
     if (addrChain.size() == 1) {
         Log_info("==== reached the final link in the chain");
-        stateCounter++;
         // Log_info("inside TestServer::cRPCSRV; checkpoint 1 @ %d", gettid());
         // // add a verify statement
         auto x = (TestCommo *)(this->commo_);
@@ -40,21 +39,22 @@ void TestServer::cRPCSRV(const uint64_t& id, const MarshallDeputy& cmd, const st
         // for (auto el : state) {
           // Log_info("inside TestServer::cRPCSRV; checkpoint 3 @ %d", gettid());
           // bool y = ((el.followerAppendOK == 1) && (this->IsLeader()) && (currentTerm == el.followerCurrentTerm));
-          ev->FeedResponse(1, stateCounter);
+          for (auto i : state) ev->FeedResponse(true, 1);
         // }
         // Log_info("inside TestServer::cRPCSRV; checkpoint 4 @ %d", gettid());
-        Log_info("==== returning from cRPC");
+        Log_info("==== returning from cRPCSRV;");
         return;
     }
 
-  // std::vector<AppendEntriesResult> st(state);
-  // st.push_back(res);
+  std::vector<AppendEntriesResult> st(state);
+  AppendEntriesResult res;
+  st.push_back(res);
   
   vector<uint16_t> addrChainCopy(addrChain.begin() + 1, addrChain.end());
 
   parid_t par_id = this->frame_->site_info_->partition_id_;
 
-  ((TestCommo *)(this->commo_))->cRPC2(id, cmd, addrChainCopy, state);
+  ((TestCommo *)(this->commo_))->cRPC2(id, cmd, addrChainCopy, st);
 
   Log_info("==== returning from TestServer::cRPCSRV");
 }
