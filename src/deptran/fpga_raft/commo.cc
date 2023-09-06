@@ -569,7 +569,7 @@ FpgaRaftCommo::BroadcastAppendEntries(parid_t par_id,
     }
 	if (p.first == leader_site_id) {
         // fix the 1c1s1p bug
-        // Log_info("leader_site_id %d", leader_site_id);
+        Log_info("@@@ FpgaRaft CP 23A: leader_site_id %d", leader_site_id);
         
         e->FeedResponse(true, prevLogIndex + 1, ip);
         continue;
@@ -580,7 +580,7 @@ FpgaRaftCommo::BroadcastAppendEntries(parid_t par_id,
 
     fuattr.callback = [this, e, isLeader, currentTerm, follower_id, n, ip, begin] (Future* fu) {
       // Log_info("$$$ inside fuattr.callback, response received; count: %ld", count);
-      // Log_info("*** inside FpgaRaftCommo::BroadcastAppendEntries; received response");
+      Log_info("*** inside FpgaRaftCommo::BroadcastAppendEntries; received response");
       uint64_t accept = 0;
       uint64_t term = 0;
       uint64_t index = 0;
@@ -595,6 +595,7 @@ FpgaRaftCommo::BroadcastAppendEntries(parid_t par_id,
 			//Log_info("reply from server: %s and is_ready: %d", ip.c_str(), e->IsReady());
 			clock_gettime(CLOCK_MONOTONIC, &end);
 			//Log_info("time of reply on server %d: %ld", follower_id, (end.tv_sec - begin.tv_sec)*1000000000 + end.tv_nsec - begin.tv_nsec);
+      Log_info("@@@ FpgaRaft CP 23B");
 			
       bool y = ((accept == 1) && (isLeader) && (currentTerm == term));
       e->FeedResponse(y, index, ip);
@@ -618,7 +619,7 @@ FpgaRaftCommo::BroadcastAppendEntries(parid_t par_id,
     Future::safe_release(f);
   }
   verify(!e->IsReady());
-  // // Log_info("*** returning from FpgaRaftCommo::BroadcastAppendEntries");
+  Log_info("*** returning from FpgaRaftCommo::BroadcastAppendEntries");
   return e;
 }
 

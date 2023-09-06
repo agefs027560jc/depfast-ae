@@ -136,7 +136,7 @@ void FpgaRaftServiceImpl::AppendEntries(const uint64_t& slot,
 
   });
 
-  // Log_info("==== returning from FpgaRaftServiceImpl::AppendEntries");
+  Log_info("==== returning from FpgaRaftServiceImpl::AppendEntries");
 	
 }
 

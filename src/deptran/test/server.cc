@@ -20,7 +20,7 @@ TestServer::~TestServer() {
 	stop_ = true;
 }
 
-void TestServer::cRPCSRV(const uint64_t& id, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const std::vector<AppendEntriesResult>& state){
+void TestServer::cRPCSRV(const uint64_t& id, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const std::vector<AppendEntriesResult>& state) {
   Log_info("@@@ Test CP 19: TestServer::cRPCSRV");
   toyCounter++;
   Log_info("==== inside void TestServer::cRPCSRV; counter: %ld; tid is: %d", toyCounter, gettid());
@@ -57,6 +57,17 @@ void TestServer::cRPCSRV(const uint64_t& id, const MarshallDeputy& cmd, const st
   ((TestCommo *)(this->commo_))->cRPC2(id, cmd, addrChainCopy, st);
 
   Log_info("==== returning from TestServer::cRPCSRV");
+}
+
+void TestServer::cRPCSRV_B(const MarshallDeputy& cmd, uint64_t *AcceptOK, const function<void()> &cb) {
+  Log_info("@@@ Test CP 19A: TestServer::cRPCSRV_B");
+  std::lock_guard<std::recursive_mutex> lock(mtx_);
+
+  toyCounter++;
+  Log_info("==== inside void TestServer::cRPCSRV_B; counter: %ld; tid is: %d", toyCounter, gettid());
+  *AcceptOK = 1;
+  cb();
+  Log_info("==== returning from TestServer::cRPCSRV_B; counter: %ld; tid is: %d", toyCounter, gettid());
 }
 
 }
