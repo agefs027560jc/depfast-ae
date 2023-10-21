@@ -8,8 +8,11 @@
 
 namespace janus {
 thread_local bool hasPrinted2 = false;
-int g = 2;
-int i = g;
+// int i = 1;      // #follower start
+// int g = 1;      // #followers inside same core
+// int c = 1;      // #core per follower
+// int s = 1;      // #core start
+// bool x = true;  // #core exclusion
 
 SampleCrpcServiceImpl::SampleCrpcServiceImpl(TxLogServer *sched)
     : sched_((SampleCrpcServer*)sched) {
@@ -30,12 +33,15 @@ void SampleCrpcServiceImpl::CrpcAdd(const uint64_t& id,
   if (!hasPrinted2) {
       thread_local pid_t t = gettid();
       Log_info("tid of non-leader is %d", t);
-    //   if (addrChain.size() > 1) {
-    //     thread_local cpu_set_t cs;
-    //     CPU_ZERO(&cs);
-    //     CPU_SET(i++ / g, &cs);
-    //     verify(sched_setaffinity(t, sizeof(cs), &cs) == 0);
-    //   }
+      // if (addrChain.size() > 1) {
+      //   thread_local cpu_set_t cs;
+      //   CPU_ZERO(&cs);
+      //   for (int k = 0; k < c; k++)
+      //     CPU_SET(s+k-((!x) ? ((i-1) / g) : 0 ), &cs);
+      //   s += (i % g == 0) ? c : 0;
+      //   i++;
+      //   verify(sched_setaffinity(t, sizeof(cs), &cs) == 0);
+      // }
       hasPrinted2 = true;  // Update the static variable
   }
 
@@ -63,10 +69,13 @@ void SampleCrpcServiceImpl::BroadcastAdd(const int64_t& value1,
   if (!hasPrinted2) {
       thread_local pid_t t = gettid();
       Log_info("tid of non-leader is %d", t);
-    //   thread_local cpu_set_t cs;
-    //   CPU_ZERO(&cs);
-    //   CPU_SET(i++ / g, &cs);
-    //   verify(sched_setaffinity(t, sizeof(cs), &cs) == 0);
+      // thread_local cpu_set_t cs;
+      // CPU_ZERO(&cs);
+      // for (int k = 0; k < c; k++)
+      //   CPU_SET(s+k-((!x) ? ((i-1) / g) : 0 ), &cs);
+      // s += (i % g == 0) ? c : 0;
+      // i++;
+      // verify(sched_setaffinity(t, sizeof(cs), &cs) == 0);
       hasPrinted2 = true;  // Update the static variable
   }
 
