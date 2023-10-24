@@ -31,11 +31,6 @@ void SampleCrpcServiceImpl::CrpcAdd(const uint64_t& id,
 
   verify(sched_ != nullptr);
   //Log_info("*** inside SampleCrpcServiceImpl::CrpcAdd; tid: %d", gettid());
-  if (!first) {
-    g = (addrChain.size()-1) / 2;
-    g += (addrChain.size() % 2 != 0) ? 0 : 1;
-    first = true;
-  }
   if (!hasPrinted2) {
       thread_local pid_t t = gettid();
       Log_info("tid of non-leader is %d", t);
