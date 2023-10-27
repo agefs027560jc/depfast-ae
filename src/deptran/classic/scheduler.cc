@@ -85,6 +85,7 @@ bool SchedulerClassic::Dispatch(cmdid_t cmd_id,
                                 struct DepId dep_id,
                                 shared_ptr<Marshallable> cmd,
                                 TxnOutput& ret_output) {
+  // Log_info("*** inside SchedulerClassic::Dispatch; checkpoint 0");
   auto sp_vec_piece =
       dynamic_pointer_cast<VecPieceData>(cmd)->sp_vec_piece_data_;
   verify(sp_vec_piece);
@@ -146,6 +147,7 @@ bool SchedulerClassic::OnPrepare(cmdid_t tx_id,
                                  const std::vector<i32>& sids,
                                  struct DepId dep_id,
 																 bool& null_cmd) {
+  // Log_info("*** inside SchedulerClassic::OnPrepare");
   auto sp_tx = dynamic_pointer_cast<TxClassic>(GetOrCreateTx(tx_id));
   verify(sp_tx);
 	/*if(sp_tx->cmd_ == NULL){
@@ -215,6 +217,9 @@ int SchedulerClassic::OnEarlyAbort(txnid_t tx_id) {
 int SchedulerClassic::OnCommit(txnid_t tx_id,
 															 struct DepId dep_id,
 															 int commit_or_abort) {
+  static int64_t count = 0;
+  count++;
+  // Log_info("*** inside SchedulerClassic::OnCommit(); count: %ld", count);
   std::lock_guard<std::recursive_mutex> lock(mtx_);
   Log_debug("%s: at site %d, tx: %" PRIx64,
             __FUNCTION__, this->site_id_, tx_id);
@@ -223,8 +228,23 @@ int SchedulerClassic::OnCommit(txnid_t tx_id,
 //  verify(!sp_tx->inuse);
 //  sp_tx->inuse = true;
 //
+  if (Config::GetConfig()->IsReplicated() && Config::GetConfig()->IsSampleCrpc()){
+    auto cmd = std::make_shared<TpcCommitAddCommand>();
+    cmd->tx_id_ = tx_id;
+    cmd->ret_ = commit_or_abort;
+    cmd->cmd_ = sp_tx->cmd_;
+    cmd->value_1 = rand() % 100;
+    cmd->value_2 = rand() % 100;
+    sp_tx->is_leader_hint_ = true;
+    auto sp_m = dynamic_pointer_cast<Marshallable>(cmd);
+    shared_ptr<Coordinator> coo(CreateRepCoord(dep_id.id));
+    // Log_info("***** inside SchedulerClassic::OnCommit; cp1; tid: %d", gettid());
+    coo->Submit(sp_m);
+    sp_tx->commit_result->Wait();
+		slow_ = coo->slow_;
+  }
   //always true
-  if (Config::GetConfig()->IsReplicated()) {
+  else if (Config::GetConfig()->IsReplicated()) {
     auto cmd = std::make_shared<TpcCommitCommand>();
     cmd->tx_id_ = tx_id;
     cmd->ret_ = commit_or_abort;
@@ -232,6 +252,7 @@ int SchedulerClassic::OnCommit(txnid_t tx_id,
     sp_tx->is_leader_hint_ = true;
     auto sp_m = dynamic_pointer_cast<Marshallable>(cmd);
     shared_ptr<Coordinator> coo(CreateRepCoord(dep_id.id));
+    // Log_info("***** inside SchedulerClassic::OnCommit; cp1; tid: %d", gettid());
     coo->Submit(sp_m);
     sp_tx->commit_result->Wait();
 		slow_ = coo->slow_;
@@ -245,6 +266,7 @@ int SchedulerClassic::OnCommit(txnid_t tx_id,
       verify(0);
     }
   }
+  // Log_info("*** returning SchedulerClassic::OnCommit(); count: %ld", count);
   return 0;
 }
 
@@ -307,6 +329,49 @@ int SchedulerClassic::CommitReplicated(TpcCommitCommand& tpc_commit_cmd) {
   return 0;
 }
 
+int SchedulerClassic::CommitAddReplicated(TpcCommitAddCommand& tpc_commit_cmd) {
+  std::lock_guard<std::recursive_mutex> lock(mtx_);
+  auto tx_id = tpc_commit_cmd.tx_id_;
+  auto sp_tx = dynamic_pointer_cast<TxClassic>(GetOrCreateTx(tx_id));
+  /**
+   * In Copilot, the same cmd commits twice, one in pilot log, another
+   * in copilot log. Must omit the second attempt to commit
+   */
+  if (sp_tx->commit_result->IsReady())
+    return 0;
+  int commit_or_abort = tpc_commit_cmd.ret_;
+  if (!sp_tx->cmd_)
+    sp_tx->cmd_ = tpc_commit_cmd.cmd_;
+  if (!sp_tx->is_leader_hint_) {
+    if (commit_or_abort == REJECT) {
+      sp_tx->commit_result->Set(1);
+      return 0;
+    } else {
+      verify(sp_tx->cmd_);
+      unique_ptr<TxnOutput> out = std::make_unique<TxnOutput>();
+			DepId di = { "dep", 0 };
+      SchedulerClassic::Dispatch(sp_tx->tid_, di, sp_tx->cmd_, *out);
+      DoPrepare(sp_tx->tid_);
+    }
+  }
+  if (commit_or_abort == SUCCESS) {
+    sp_tx->committed_ = true;
+    DoCommit(*sp_tx);
+  } else if (commit_or_abort == REJECT) {
+    sp_tx->aborted_ = true;
+    DoAbort(*sp_tx);
+  } else {
+    verify(0);
+  }
+  // if (sp_tx->is_leader_hint_) {
+  //   // mostly for debug
+  //   sp_tx->commit_result->Set(1);
+  // }
+  sp_tx->commit_result->Set(1);
+  sp_tx->ev_execute_ready_->Set(1);
+  return 0;
+}
+
 bool SchedulerClassic::CheckCommitted(Marshallable& tpc_commit_cmd) { //todo
   std::lock_guard<std::recursive_mutex> lock(mtx_);
   auto &c = dynamic_cast<TpcCommitCommand&>(tpc_commit_cmd);
@@ -324,6 +389,9 @@ void SchedulerClassic::Next(Marshallable& cmd) {
   } else if (cmd.kind_ == MarshallDeputy::CMD_TPC_COMMIT) {
     auto& c = dynamic_cast<TpcCommitCommand&>(cmd);
     CommitReplicated(c);
+  } else if (cmd.kind_ == MarshallDeputy::CMD_SAMPLE_CRPC_APPEND_ENTRIES) {
+    auto& c = dynamic_cast<TpcCommitAddCommand&>(cmd);
+    CommitAddReplicated(c);
   } else if (cmd.kind_ == MarshallDeputy::CMD_TPC_EMPTY) {
     // do nothing
     auto& c = dynamic_cast<TpcEmptyCommand&>(cmd);
