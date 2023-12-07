@@ -240,7 +240,7 @@ int SchedulerClassic::OnCommit(txnid_t tx_id,
     shared_ptr<Coordinator> coo(CreateRepCoord(dep_id.id));
     // Log_info("***** inside SchedulerClassic::OnCommit; cp1; tid: %d", gettid());
         //Log_info("Could be right before CoordinatorSampleCrpc:Submit()");
-        // Log_info("%s: tracepath pid %d", __FUNCTION__, gettid());
+        //Log_info("%s: tracepath pid %d", __FUNCTION__, gettid());
     coo->Submit(sp_m);
     sp_tx->commit_result->Wait();
 		slow_ = coo->slow_;

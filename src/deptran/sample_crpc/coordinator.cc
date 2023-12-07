@@ -7,6 +7,7 @@
 #include "server.h"
 
 namespace janus {
+uint64_t req_counter = 0;
 
 CoordinatorSampleCrpc::CoordinatorSampleCrpc(uint32_t coo_id,
                                              int32_t benchmark,
@@ -25,7 +26,7 @@ void CoordinatorSampleCrpc::Submit(shared_ptr<Marshallable>& cmd,
   verify(cmd_->kind_ != MarshallDeputy::UNKNOWN);
   //Log_info("*** inside void CoordinatorSampleCrpc::Submit, cmd kind: %d", cmd_->kind_);
   Add();
-  Log_info("Tracepath:  3; leader thread id %d", gettid());
+  //Log_info("Tracepath:  3; leader thread id %d", gettid());
   //Log_info("*** returning from void CoordinatorSampleCrpc::Submit");
   this->sch_->app_next_(*cmd);
 }
@@ -56,10 +57,15 @@ void CoordinatorSampleCrpc::Add() {
     else {
         verify(0);
     }
+    // struct timespec begin;
+    // struct timespec end;
+    // clock_gettime(CLOCK_MONOTONIC, &begin);
 
     //Log_info("=== waiting for quorum");
     sp_quorum->Wait();
-    //Log_info("*** quorum reached");
+    // clock_gettime(CLOCK_MONOTONIC, &end);
+    // Log_info("*** quorum reached");
+    // Log_info("*** request no: %ld; time spent: %ld", req_counter++, (end.tv_sec - begin.tv_sec)*1000000000 + end.tv_nsec - begin.tv_nsec);
 
     // Log_info("*** returning from void CoordinatorSampleCrpc::Add");
 }

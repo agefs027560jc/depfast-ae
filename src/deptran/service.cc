@@ -79,8 +79,8 @@ void ClassicServiceImpl::Dispatch(const i64& cmd_id,
     //Log_info("**** Current time in milliseconds since the epoch: %lld with tid:%d",currentTimeMs, gettid());
     *res = SUCCESS;
     //Log_info("Could be right before SchedulerNone::Dispatch()");
-    // Log_info("%s: tracepath pid %d", __FUNCTION__, gettid());
-  Log_info("Tracepath:  2; leader thread id %d", gettid());
+    //Log_info("%s: tracepath pid %d", __FUNCTION__, gettid());
+    //Log_info("Tracepath:  2; leader thread id %d", gettid());
     if (!dtxn_sched()->Dispatch(cmd_id, sp, *output)) {
       *res = REJECT;
     }

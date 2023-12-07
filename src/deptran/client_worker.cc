@@ -318,7 +318,7 @@ void ClientWorker::Work() {
 
         // Log_info("&&&&& inside createRun cp1");
         //Log_info("Could be right before ClientWorker::DispatchRequest()");
-        // Log_info("%s: tracepath pid %d", __FUNCTION__, gettid());
+        //Log_info("%s: tracepath pid %d", __FUNCTION__, gettid());
 				this->DispatchRequest(coo);         // #con: dispatch a request
         // Log_info("==== returned from call this->DispatchRequest");
         if (config_->client_type_ == Config::Closed) {
@@ -357,7 +357,7 @@ void ClientWorker::Work() {
           verify(ev->status_ != Event::TIMEOUT);
           if (coo->committed_) {
             success++;
-            Log_info("Tracepath:  4; client thread id %d", gettid());
+            //Log_info("Tracepath:  4; client thread id %d", gettid());
           }
           sp_n_tx_done_.Set(sp_n_tx_done_.value_+1);
           num_try.fetch_add(coo->n_retry_);

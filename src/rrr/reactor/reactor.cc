@@ -186,8 +186,10 @@ void Reactor::Loop(bool infinite, bool check_timeout) {
       verify(sp_coro->status_ == Coroutine::PAUSED);
       verify(coros_.find(sp_coro) != coros_.end()); // TODO ?????????
       if (event.status_ == Event::READY) {
+        // Log_info("ready %d", gettid());
         event.status_ = Event::DONE;
       } else {
+        // Log_info("timeout %d", gettid());
         verify(event.status_ == Event::TIMEOUT);
       }
 
@@ -451,7 +453,7 @@ class PollMgr::PollThread {
       auto sp_job = *it;
       if (sp_job->Ready()) {
         //Log_info("Could be right before GotoNextPhase()");
-        // // Log_info("%s: tracepath pid %d", __FUNCTION__, gettid());
+        //Log_info("%s: tracepath pid %d", __FUNCTION__, gettid());
         Coroutine::CreateRun([sp_job]() {sp_job->Work();}, __FILE__, __LINE__);
       }
       if (sp_job->Done()) {

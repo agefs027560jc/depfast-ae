@@ -102,8 +102,10 @@ bool Event::Test() {
   verify(__debug_creator); // if this fails, the event is not created by reactor.
   if (IsReady()) {
     if (status_ == INIT) {
+      // Log_info("==== event status INIT, triggered?");
       // wait has not been called, do nothing until wait happens.
     } else if (status_ == WAIT) {
+      // Log_info("==== event status WAIT, triggered?");
       auto sp_coro = wp_coro_.lock();
       verify(sp_coro);
       verify(status_ != DEBUG);
@@ -121,9 +123,12 @@ bool Event::Test() {
     } else if (status_ == READY) {
       // This could happen for a quorum event.
       // Log_info("==== event status ready, triggered?");
+      // Log_info("==== event status READY, triggered?");
     } else if (status_ == DONE) {
       // do nothing
+      // Log_info("==== event status DONE, triggered?");
     } else {
+      // Log_info("==== event status ELSE, triggered?");
       verify(0);
     }
     return true;

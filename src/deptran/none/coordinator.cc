@@ -14,7 +14,7 @@ void CoordinatorNone::GotoNextPhase() {
     case Phase::INIT_END:
       // Log_info("*** inside CoordinatorNone::GotoNextPhase(); DispatchAsync()");
         //Log_info("Could be right before CoordinatorClassic::DispatchAsync()");
-        // Log_info("%s: tracepath pid %d", __FUNCTION__, gettid());
+        //Log_info("%s: tracepath pid %d", __FUNCTION__, gettid());
       DispatchAsync();
       verify(phase_ % n_phase == Phase::DISPATCH);
       break;

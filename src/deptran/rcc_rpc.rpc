@@ -151,7 +151,9 @@ abstract service SampleCrpc {
                vector<uint16_t> addrChain,
                vector<ResultAdd> state);
 
-  defer BroadcastAdd(int64_t value1,
+  defer BroadcastAdd(uint64_t id,
+               uint64_t n,
+               int64_t value1,
                int64_t value2 |
                int64_t result);
 }

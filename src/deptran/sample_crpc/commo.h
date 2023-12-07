@@ -30,9 +30,7 @@ class SampleCrpcQuorumEvent: public QuorumEvent {
             //Log_info("==== inside SampleCrpcQuorumEvent:FeedRespons; checkpoint 1");
             VoteNo();
         }
-        /*Log_debug("fpga-raft comm accept event, "
-                  "yes vote: %d, no vote: %d, min index: %d",
-                  n_voted_yes_, n_voted_no_, minIndex);*/
+        // Log_info("FeedResponse, yes vote: %d, no vote: %d, min index: %d", n_voted_yes_, n_voted_no_, minIndex);
         // Log_info("==== inside SampleCrpcQuorumEvent:FeedRespons; checkpoint final");
     }
 };
@@ -41,6 +39,7 @@ class SampleCrpcCommo : public Communicator {
 
 friend class SampleCrpcProxy;
  public:
+  uint64_t crpc_id_counter = 0;
   std::unordered_map<uint64_t, shared_ptr<SampleCrpcQuorumEvent>> cRPCEvents {};
 
   SampleCrpcCommo() = delete;
