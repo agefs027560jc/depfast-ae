@@ -57,15 +57,15 @@ void CoordinatorSampleCrpc::Add() {
     else {
         verify(0);
     }
-    // struct timespec begin;
-    // struct timespec end;
-    // clock_gettime(CLOCK_MONOTONIC, &begin);
+    struct timespec begin;
+    struct timespec end;
+    clock_gettime(CLOCK_MONOTONIC, &begin);
 
     //Log_info("=== waiting for quorum");
     sp_quorum->Wait();
-    // clock_gettime(CLOCK_MONOTONIC, &end);
+    clock_gettime(CLOCK_MONOTONIC, &end);
     // Log_info("*** quorum reached");
-    // Log_info("*** request no: %ld; time spent: %ld", req_counter++, (end.tv_sec - begin.tv_sec)*1000000000 + end.tv_nsec - begin.tv_nsec);
+    Log_info("*** request no: %ld; time spent: %ld", req_counter++, (end.tv_sec - begin.tv_sec)*1000000000 + end.tv_nsec - begin.tv_nsec);
 
     // Log_info("*** returning from void CoordinatorSampleCrpc::Add");
 }

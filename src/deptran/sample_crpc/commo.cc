@@ -42,9 +42,9 @@ shared_ptr<SampleCrpcQuorumEvent> SampleCrpcCommo::crpc_add(parid_t par_id,
                                       const int64_t& value1,
                                       const int64_t& value2,
                                       shared_ptr<Marshallable> cmd) {
-  // struct timespec begin;
-  // struct timespec end;
-  // clock_gettime(CLOCK_MONOTONIC, &begin);
+  struct timespec begin;
+  struct timespec end;
+  clock_gettime(CLOCK_MONOTONIC, &begin);
 
   //Log_info("Inside SampleCrpcCommo::crpc_add");
   static bool hasPrinted = false;  // Static variable to track if it has printed
@@ -128,8 +128,8 @@ shared_ptr<SampleCrpcQuorumEvent> SampleCrpcCommo::crpc_add(parid_t par_id,
 
   }
   // verify(!e->IsReady());
-  // clock_gettime(CLOCK_MONOTONIC, &end);
-  // Log_info("*** request no: %ld; time spent: %ld", crpc_id, (end.tv_sec - begin.tv_sec)*1000000000 + end.tv_nsec - begin.tv_nsec);
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  Log_info("*** request no: %ld; time spent: %ld", crpc_id, (end.tv_sec - begin.tv_sec)*1000000000 + end.tv_nsec - begin.tv_nsec);
   return e;
 }
 
@@ -138,9 +138,9 @@ shared_ptr<SampleCrpcQuorumEvent> SampleCrpcCommo::broadcast_add(parid_t par_id,
                                       const int64_t& value1,
                                       const int64_t& value2,
                                       shared_ptr<Marshallable> cmd) {
-  // struct timespec begin;
-  // struct timespec end;
-  // clock_gettime(CLOCK_MONOTONIC, &begin);
+  struct timespec begin;
+  struct timespec end;
+  clock_gettime(CLOCK_MONOTONIC, &begin);
 
   static bool hasPrinted = false;  // Static variable to track if it has printed
 
@@ -232,8 +232,8 @@ shared_ptr<SampleCrpcQuorumEvent> SampleCrpcCommo::broadcast_add(parid_t par_id,
   }
   // verify(!e->IsReady());
   // // Log_info("*** returning from SampleCrpcCommo::BroadcastAdd");
-  // clock_gettime(CLOCK_MONOTONIC, &end);
-  // Log_info("*** request no: %ld; time spent: %ld", crpc_id, (end.tv_sec - begin.tv_sec)*1000000000 + end.tv_nsec - begin.tv_nsec);
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  Log_info("*** request no: %ld; time spent: %ld", crpc_id, (end.tv_sec - begin.tv_sec)*1000000000 + end.tv_nsec - begin.tv_nsec);
   return e;
 }
 
