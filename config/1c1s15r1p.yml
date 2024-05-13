@@ -6,23 +6,37 @@ site:
 
 # process_name - host_addr map
 process:
-  s101: localhost
-  s201: localhost
-  s301: localhost
-  s401: localhost
-  s501: localhost
-  s601: localhost
-  s701: localhost
-  s801: localhost
-  s901: localhost
-  s1001: localhost
-  s1101: localhost
-  s1201: localhost
-  s1301: localhost
-  s1401: localhost
-  s1501: localhost
+  s101: p1
+  s201: p2
+  s301: p3
+  s401: p4
+  s501: p5
+  s601: p6
+  s701: p7
+  s801: p8
+  s901: p9
+  s1001: p10
+  s1101: p11
+  s1201: p12
+  s1301: p13
+  s1401: p14
+  s1501: p15
   c101: localhost
     
 host:
-  localhost: 127.0.0.1
+  p1: 172.20.0.11
+  p2: 172.20.0.12
+  p3: 172.20.0.13
+  p4: 172.20.0.14
+  p5: 172.20.0.15
+  p6: 172.20.0.16
+  p7: 172.20.0.17
+  p8: 172.20.0.18
+  p9: 172.20.0.19
+  p10: 172.20.0.20
+  p11: 172.20.0.21
+  p12: 172.20.0.22
+  p13: 172.20.0.23
+  p14: 172.20.0.24
+  p15: 172.20.0.25
 

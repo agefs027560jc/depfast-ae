@@ -6,6 +6,7 @@
 #include "frame.h"
 #include "communicator.h"
 #include "fpga_raft/coordinator.h"
+#include "paxos/coordinator.h"
 #include "classic/tpc_command.h"
 
 namespace janus {
@@ -359,13 +360,15 @@ void ServerWorker::StartBenchmark(){
               coo->par_id_ = 0;
               coo->loc_id_ = site_info_->locale_id;
               // Log_info("Inside startBenchmark; cp2");
-              auto empty_cmd = std::make_shared<TpcRaftSampleCommand>();
+              // auto empty_cmd = std::make_shared<TpcRaftSampleCommand>();
+              auto empty_cmd = std::make_shared<TpcPaxosSampleCommand>();
               
               empty_cmd->message_ = payload.c_str();
               // Log_info("Insi32de startBenchmark; cp3");
               auto sp_m = dynamic_pointer_cast<Marshallable>(empty_cmd);
               // Log_info("Inside startBenchmark; cp4");
-              ((CoordinatorFpgaRaft *)coo)->Submit(sp_m, std::function<void()>(), std::function<void()>());
+              // ((CoordinatorFpgaRaft *)coo)->Submit(sp_m, std::function<void()>(), std::function<void()>());
+              ((CoordinatorMultiPaxos *)coo)->Submit(sp_m, std::function<void()>(), std::function<void()>());
               struct timespec t_buf;
               clock_gettime(CLOCK_REALTIME, &t_buf);
               latency_manager.push_back(t_buf.tv_sec - last_time.tv_sec + (t_buf.tv_nsec - last_time.tv_nsec) / 1000000000.0);

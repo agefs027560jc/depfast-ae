@@ -224,6 +224,7 @@ int Config::CreateConfig(int argc, char **argv) {
   config_s->config_paths_ = config_paths;
   config_s->Load();
   config_s->cRPC_version_ = cRPC_version;
+  config_s->currentId_ = currentId;
   return SUCCESS;
 }
 

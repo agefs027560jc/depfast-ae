@@ -37,6 +37,7 @@ class Config {
 
   // configuration for trial controller.
   uint32_t cRPC_version_ = 0; // 0 for no_crpc, 1 for chained rpc
+  uint32_t currentId_ = 0;
 
   // configuration for trial controller.
   char *ctrl_hostname_;
@@ -254,6 +255,7 @@ class Config {
   bool IsSampleCrpc();
   int32_t get_tot_req();
   uint32_t get_cRPC_version();
+  uint32_t get_currentId();
   bool get_failover() { return failover_; }
   int32_t get_failover_stop_interval() { return failover_stop_int_; }
   int32_t get_failover_run_interval() { return failover_run_int_; }

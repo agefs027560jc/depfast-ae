@@ -14,6 +14,7 @@ CoordinatorMultiPaxos::CoordinatorMultiPaxos(uint32_t coo_id,
 }
 
 void CoordinatorMultiPaxos::Forward(){
+  // Log_info("Tracepath I");
   verify(!in_forward);
   in_forward=true;
   auto follower_id = frame_->site_info_->id;
@@ -28,6 +29,7 @@ void CoordinatorMultiPaxos::Forward(){
 void CoordinatorMultiPaxos::Submit(shared_ptr<Marshallable>& cmd,
                                    const function<void()>& func,
                                    const function<void()>& exe_callback) {
+  // Log_info("Tracepath II");
   if (!IsLeader()) {
     //change back to fatal
     Log_info("i am not the leader; site %d; locale %d",
@@ -46,10 +48,12 @@ void CoordinatorMultiPaxos::Submit(shared_ptr<Marshallable>& cmd,
 }
 
 ballot_t CoordinatorMultiPaxos::PickBallot() {
+  // Log_info("Tracepath III");
   return curr_ballot_ + 1;
 }
 
 void CoordinatorMultiPaxos::Prepare() {
+  // Log_info("Tracepath IV");
   std::lock_guard<std::recursive_mutex> lock(mtx_);
   verify(0); // for debug;
   verify(!in_prepare_);
@@ -118,6 +122,7 @@ void CoordinatorMultiPaxos::Prepare() {
 }
 
 void CoordinatorMultiPaxos::Accept() {
+  // Log_info("Tracepath V");
   std::lock_guard<std::recursive_mutex> lock(mtx_);
   verify(!in_accept);
   in_accept = true;
@@ -125,16 +130,25 @@ void CoordinatorMultiPaxos::Accept() {
                 "par_id_: %lx, slot_id: %llx",
             par_id_, slot_id_);
   auto start = chrono::system_clock::now();
-  auto sp_quorum = commo()->BroadcastAccept(par_id_, slot_id_, curr_ballot_, cmd_);
+
+  shared_ptr<PaxosAcceptQuorumEvent> sp_quorum = nullptr;
+
+  if (Config::GetConfig()->get_cRPC_version() == 2){
+    sp_quorum = commo()->CrpcAccept(par_id_, frame_->site_info_->id, slot_id_, curr_ballot_, cmd_);
+  } else if (Config::GetConfig()->get_cRPC_version() == 0){
+    sp_quorum = commo()->BroadcastAccept(par_id_, slot_id_, curr_ballot_, cmd_);
+  } else {
+    sp_quorum = commo()->BroadcastAccept(par_id_, slot_id_, curr_ballot_, cmd_);
+  }
   sp_quorum->id_ = dep_id_;
-	Log_info("current coroutine's dep_id: %d", Coroutine::CurrentCoroutine()->dep_id_);
+	// Log_info("current coroutine's dep_id: %d", Coroutine::CurrentCoroutine()->dep_id_);
   //Log_info("Accept(): %d", dep_id_);
 
   sp_quorum->Wait();
   auto end = chrono::system_clock::now();
   auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
   //auto duration_ready = chrono::duration_cast<chrono::microseconds>(end-sp_quorum->ready_time);
-  Log_info("Duration of Wait() in Accept() is: %d", duration.count());
+  // Log_info("Duration of Wait() in Accept() is: %d", duration.count());
   //Log_info("Duration after Ready to end of Wait() is: %d", duration_ready.count());
   sp_quorum->log();
   if (sp_quorum->Yes()) {
@@ -181,8 +195,9 @@ void CoordinatorMultiPaxos::Accept() {
 }
 
 void CoordinatorMultiPaxos::Commit() {
+  // Log_info("Tracepath VI");
   std::lock_guard<std::recursive_mutex> lock(mtx_);
-  commit_callback_();
+  // commit_callback_();
   Log_debug("multi-paxos broadcast commit for partition: %d, slot %d",
             (int) par_id_, (int) slot_id_);
   commo()->BroadcastDecide(par_id_, slot_id_, curr_ballot_, cmd_);
@@ -191,6 +206,7 @@ void CoordinatorMultiPaxos::Commit() {
 }
 
 void CoordinatorMultiPaxos::GotoNextPhase() {
+  // Log_info("Tracepath VII");
   int n_phase = 4;
   int current_phase = phase_ % n_phase;
   //Log_info("Current phase is %d", current_phase);

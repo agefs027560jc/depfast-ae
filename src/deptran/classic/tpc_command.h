@@ -53,6 +53,15 @@ class TpcRaftSampleCommand : public Marshallable {
   virtual Marshal& FromMarshal(Marshal&) override;
 };
 
+class TpcPaxosSampleCommand : public Marshallable {
+ public:
+  TpcPaxosSampleCommand() : Marshallable(MarshallDeputy::CMD_TPC_PAXOS_SAMPLE_CMD) {
+  }
+  std::string message_;
+  virtual Marshal& ToMarshal(Marshal&) const override;
+  virtual Marshal& FromMarshal(Marshal&) override;
+};
+
 class TpcEmptyCommand : public Marshallable {
  private:
   

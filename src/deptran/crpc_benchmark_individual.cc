@@ -282,7 +282,7 @@ int main(int argc, char **argv) {
     if (number_servers > 0) {
         for (int i = 1; i <= number_servers; ++i) {
             // Constructing the address string
-            std::string address = "172.19.0." + std::to_string(i+10) + ":2100"; // 172.19.0.11 ...
+            std::string address = "172.20.0." + std::to_string(i+10) + ":2100"; // 172.20.0.11 ...
 
             // Converting the string to a const char* and adding it to the vector
             // Note: Be aware that the temporary string will be destructed after the iteration.

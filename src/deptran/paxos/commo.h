@@ -43,6 +43,8 @@ class PaxosAcceptQuorumEvent: public QuorumEvent {
 
 class MultiPaxosCommo : public Communicator {
  public:
+  std::unordered_map<uint64_t, shared_ptr<PaxosAcceptQuorumEvent>> cRPCEvents {};
+
   MultiPaxosCommo() = delete;
   MultiPaxosCommo(PollMgr*);
 
@@ -65,6 +67,22 @@ class MultiPaxosCommo : public Communicator {
                   slotid_t slot_id,
                   ballot_t ballot,
                   shared_ptr<Marshallable> cmd);
+
+  shared_ptr<PaxosAcceptQuorumEvent>
+  CrpcAccept(parid_t par_id,
+                  siteid_t leader_site_id,
+                  slotid_t slot_id,
+                  ballot_t ballot,
+                  shared_ptr<Marshallable> cmd);
+
+  void CrpcProxyAccept(const uint64_t& id,
+                      const slotid_t slot_id,
+		                  const uint64_t time,
+                      const ballot_t ballot,
+                      const MarshallDeputy& cmd,
+                      const std::vector<uint16_t>& addrChain,
+                      const vector<PaxosMessage> state);
+
   void BroadcastAccept(parid_t par_id,
                        slotid_t slot_id,
                        ballot_t ballot,

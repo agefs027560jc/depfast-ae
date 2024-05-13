@@ -12,6 +12,7 @@
 namespace janus {
 class Command;
 class CmdData;
+class PaxosMessage;
 
 struct PaxosData {
   ballot_t max_ballot_seen_ = 0;
@@ -43,6 +44,7 @@ class PaxosServer : public TxLogServer {
       sp_instance = std::make_shared<PaxosData>();
     return sp_instance;
   }
+	void Setup();
 
   void OnForward(shared_ptr<Marshallable> &cmd,
                  uint64_t dep_id,
@@ -62,6 +64,14 @@ class PaxosServer : public TxLogServer {
                 ballot_t *max_ballot,
                 uint64_t* coro_id,
                 const function<void()> &cb);
+
+  void OnCrpcAccept(const uint64_t& id,
+                const slotid_t slot_id,
+		            const uint64_t time,
+                const ballot_t ballot,
+                const MarshallDeputy& cmd,
+                const std::vector<uint16_t>& addrChain,
+                const vector<PaxosMessage> state);
 
   void OnCommit(const slotid_t slot_id,
                 const ballot_t ballot,

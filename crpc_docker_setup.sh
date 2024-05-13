@@ -1,10 +1,12 @@
 #!/bin/bash
 
+set -e
+
 # Variables
-network_name="my_network"
-subnet="172.19.0.0/16"
-base_ip="172.19.0."
-image_name="microbench"
+network_name="nano_net"
+subnet="172.20.0.0/16"
+base_ip="172.20.0."
+image_name="llvan/microbench"
 start_ip=10
 number_of_nodes=$1  # Number of nodes passed as the first script argument
 
@@ -33,8 +35,8 @@ num_to_ip() {
 # Function to stop and remove all containers
 cleanup_containers() {
     echo "Stopping and removing existing containers..."
-    sudo docker ps -a --filter "name=micro_" --format "{{.Names}}" | xargs -r sudo docker stop
-    sudo docker ps -a --filter "name=micro_" --format "{{.Names}}" | xargs -r sudo docker rm
+    sudo docker ps -a --filter "name=nano_" --format "{{.Names}}" | xargs -r sudo docker stop
+    sudo docker ps -a --filter "name=nano_" --format "{{.Names}}" | xargs -r sudo docker rm
     echo "Cleanup complete."
 }
 
@@ -54,17 +56,20 @@ for (( i=0; i<number_of_nodes; i++ )); do
 
     echo "$current_ip"
     # Container name
-    container_name="micro_$((i+1))"  # Ensure correct increment
+    container_name="nano_$((i+1))"  # Ensure correct increment
     build_command="python3 /root/depfast/waf configure -J build"
+    cpuset="$((65 + $i))"
 
     echo "now running docker run"
     echo "container name $container_name"  # Debugging output
+    # echo "container name $container_name" at cpu $cpuset  # Debugging output
 
     # Run the Docker container with dynamic IP
-    sudo docker run -d --name "$container_name" --net $network_name --ip "${ips[i]}" -it \
+    # sudo docker run --cpuset-cpus="$cpuset" -d --name "$container_name" --net $network_name --ip "${ips[i]}" -it \
+    sudo docker run --cpuset-cpus="65-97" -d --name "$container_name" --net $network_name --ip "${ips[i]}" -it \
         --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
         -v /sys/fs/cgroup:/sys/fs/cgroup \
-        -v /home/users/kkumar/micro_benchmark/depfast-ae:/root/depfast $image_name
+        -v /home/users/llvan/workspace/depfast-micro:/root/depfast $image_name
 
     # Only run the build command on the first container
     if [ $i -eq 0 ]; then

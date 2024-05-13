@@ -38,6 +38,15 @@ class MultiPaxosServiceImpl : public MultiPaxosService {
               uint64_t* coro_id,
               rrr::DeferredReply* defer) override;
 
+  void CrpcAccept(const uint64_t& id,
+              const uint64_t& slot,
+	          const uint64_t& time,
+              const ballot_t& ballot,
+              const MarshallDeputy& cmd,
+              const std::vector<uint16_t>& addrChain,
+              const vector<PaxosMessage>& state,
+              rrr::DeferredReply* defer) override;
+
   void Decide(const uint64_t& slot,
               const ballot_t& ballot,
               const MarshallDeputy& cmd,

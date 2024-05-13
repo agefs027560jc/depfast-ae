@@ -56,6 +56,14 @@ abstract service MultiPaxos {
                ballot_t max_ballot,
                uint64_t coro_id);
 
+  defer CrpcAccept(uint64_t id,
+               uint64_t slot,
+               uint64_t time,
+               ballot_t ballot,
+               MarshallDeputy cmd,
+               vector<uint16_t> addrChain,
+               vector<PaxosMessage> state);
+
   defer Decide(uint64_t slot,
                ballot_t ballot,
                MarshallDeputy cmd);
@@ -444,6 +452,11 @@ struct AppendEntriesResult {
 
 struct ResultAdd {
 	int64_t result;
+}
+
+struct PaxosMessage {
+  ballot_t max_ballot;
+  uint64_t coro_id;
 }
 
 abstract service ClientControl {

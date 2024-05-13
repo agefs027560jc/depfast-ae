@@ -6,11 +6,13 @@ site:
 
 # process_name - host_addr map
 process:
-  s101: localhost
-  s201: localhost
-  s301: localhost
+  s101: p1
+  s201: p2
+  s301: p3
   c101: localhost
     
 host:
-  localhost: 127.0.0.1
+  p1: 172.20.0.11
+  p2: 172.20.0.12
+  p3: 172.20.0.13
 
