@@ -38,7 +38,7 @@ void MultiPaxosServiceImpl::Prepare(const uint64_t& slot,
 }
 
 void MultiPaxosServiceImpl::Accept(const uint64_t& slot,
-		                   const uint64_t& time,
+		                               const uint64_t& time,
                                    const ballot_t& ballot,
                                    const MarshallDeputy& md_cmd,
                                    ballot_t* max_ballot,
@@ -64,13 +64,12 @@ void MultiPaxosServiceImpl::Accept(const uint64_t& slot,
 
   auto coro = Coroutine::CreateRun([&] () {
     sched_->OnAccept(slot,
-		     time,
+		                 time,
                      ballot,
                      const_cast<MarshallDeputy&>(md_cmd).sp_data_,
                      max_ballot,
                      coro_id,
                      std::bind(&rrr::DeferredReply::reply, defer));
-
   });
 
   auto end = chrono::system_clock::now();
@@ -80,13 +79,13 @@ void MultiPaxosServiceImpl::Accept(const uint64_t& slot,
 }
 
 void MultiPaxosServiceImpl::CrpcAccept(const uint64_t& id,
-                                   const uint64_t& slot,
-		                               const uint64_t& time,
-                                   const ballot_t& ballot,
-                                   const MarshallDeputy& md_cmd,
-                                   const std::vector<uint16_t>& addrChain,
-                                   const vector<PaxosMessage>& state,
-                                   rrr::DeferredReply* defer) {
+                                       const uint64_t& slot,
+                                       const uint64_t& time,
+                                       const ballot_t& ballot,
+                                       const MarshallDeputy& md_cmd,
+                                       const std::vector<uint16_t>& addrChain,
+                                       const vector<PaxosMessage>& state,
+                                       rrr::DeferredReply* defer) {
   // Log_info("Tracepath D: %d", addrChain.size());
   verify(sched_ != nullptr);
   auto start = chrono::system_clock::now();
@@ -105,21 +104,21 @@ void MultiPaxosServiceImpl::CrpcAccept(const uint64_t& id,
   auto start_ = chrono::duration_cast<chrono::microseconds>(start-midn-hours-minutes).count();
   // Log_info("Duration of RPC is: %d", start_-time);
 
-  Coroutine::CreateRun([&] () {
+  auto coro = Coroutine::CreateRun([&] () {
     sched_->OnCrpcAccept(id,
-                     slot,
-                     time,
-                     ballot,
-                     md_cmd,
-                     addrChain,
-                     state);
+                         slot,
+                         time,
+                         ballot,
+                         md_cmd,
+                         addrChain,
+                         state);
     // defer->reply();
   });
 
   auto end = chrono::system_clock::now();
   auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
   // Log_info("Duration of Accept() at Follower's side is: %d", duration.count());
-  //Log_info("coro id on service side: %d", coro->id);
+  // Log_info("coro id on service side: %d", coro->id);
 }
 
 void MultiPaxosServiceImpl::Decide(const uint64_t& slot,
@@ -129,8 +128,23 @@ void MultiPaxosServiceImpl::Decide(const uint64_t& slot,
   // Log_info("Tracepath E");
   verify(sched_ != nullptr);
   auto x = md_cmd.sp_data_;
-  sched_->OnCommit(slot, ballot,x);
+  sched_->OnCommit(slot, ballot, x);
   defer->reply();
+}
+
+void MultiPaxosServiceImpl::CrpcDecide(const parid_t& par_id,
+                                       const slotid_t& slot_id,
+                                       const ballot_t& ballot,
+                                       const MarshallDeputy& cmd,
+                                       const std::vector<uint16_t>& addrChain,
+                                       const vector<PaxosMessage>& state,
+                                       rrr::DeferredReply* defer) {
+  // Log_info("Tracepath E");
+  verify(sched_ != nullptr);
+  auto coro = Coroutine::CreateRun([&] () {
+    sched_->OnCrpcCommit(par_id, slot_id, ballot, cmd, addrChain, state);
+    // defer->reply();
+  });
 }
 
 

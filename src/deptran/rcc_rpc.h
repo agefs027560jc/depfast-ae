@@ -254,7 +254,7 @@ inline rrr::Marshal& operator >>(rrr::Marshal& m, PaxosMessage& o) {
 class BenchmarkService: public rrr::Service {
 public:
     enum {
-        NOP = 0x45290ab9,
+        NOP = 0x57a6e0a7,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -310,14 +310,14 @@ public:
 class CrpcBenchmarkService: public rrr::Service {
 public:
     enum {
-        CRPCADD = 0x2970600f,
-        BROADCASTADD = 0x2755a59f,
-        CRPCLARGEPAYLOAD = 0x6d1fb4be,
-        BROADCASTLARGEPAYLOAD = 0x491df59e,
-        NOP = 0x109dd60b,
-        CRPC_NOP = 0x3ded0523,
-        NOP_LARGEPAYLOAD = 0x67f6f448,
-        CRPC_NOP_LARGEPAYLOAD = 0x51a33ef2,
+        CRPCADD = 0x573f511a,
+        BROADCASTADD = 0x43170a9a,
+        CRPCLARGEPAYLOAD = 0x5b0a999a,
+        BROADCASTLARGEPAYLOAD = 0x6578786f,
+        NOP = 0x1dc4b164,
+        CRPC_NOP = 0x135ace0a,
+        NOP_LARGEPAYLOAD = 0x58de798b,
+        CRPC_NOP_LARGEPAYLOAD = 0x13efffe5,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -656,11 +656,12 @@ public:
 class MultiPaxosService: public rrr::Service {
 public:
     enum {
-        FORWARD = 0x646948dc,
-        PREPARE = 0x17571038,
-        ACCEPT = 0x4234d927,
-        CRPCACCEPT = 0x5bd482c2,
-        DECIDE = 0x46e4c708,
+        FORWARD = 0x47a92464,
+        PREPARE = 0x1d3175d4,
+        ACCEPT = 0x1e8b886b,
+        CRPCACCEPT = 0x146d4aa3,
+        DECIDE = 0x2e283077,
+        CRPCDECIDE = 0x5c24abf6,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -679,6 +680,9 @@ public:
         if ((ret = svr->reg(DECIDE, this, &MultiPaxosService::__Decide__wrapper__)) != 0) {
             goto err;
         }
+        if ((ret = svr->reg(CRPCDECIDE, this, &MultiPaxosService::__CrpcDecide__wrapper__)) != 0) {
+            goto err;
+        }
         return 0;
     err:
         svr->unreg(FORWARD);
@@ -686,6 +690,7 @@ public:
         svr->unreg(ACCEPT);
         svr->unreg(CRPCACCEPT);
         svr->unreg(DECIDE);
+        svr->unreg(CRPCDECIDE);
         return ret;
     }
     // these RPC handler functions need to be implemented by user
@@ -695,6 +700,7 @@ public:
     virtual void Accept(const uint64_t& slot, const uint64_t& time, const ballot_t& ballot, const MarshallDeputy& cmd, ballot_t* max_ballot, uint64_t* coro_id, rrr::DeferredReply* defer) = 0;
     virtual void CrpcAccept(const uint64_t& id, const uint64_t& slot, const uint64_t& time, const ballot_t& ballot, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const std::vector<PaxosMessage>& state, rrr::DeferredReply* defer) = 0;
     virtual void Decide(const uint64_t& slot, const ballot_t& ballot, const MarshallDeputy& cmd, rrr::DeferredReply* defer) = 0;
+    virtual void CrpcDecide(const parid_t& par_id, const uint64_t& slot_id, const ballot_t& ballot, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, rrr::DeferredReply* defer) = 0;
 private:
     void __Forward__wrapper__(rrr::Request* req, rrr::ServerConnection* sconn) {
         MarshallDeputy* in_0 = new MarshallDeputy;
@@ -804,6 +810,29 @@ private:
         };
         rrr::DeferredReply* __defer__ = new rrr::DeferredReply(req, sconn, __marshal_reply__, __cleanup__);
         this->Decide(*in_0, *in_1, *in_2, __defer__);
+    }
+    void __CrpcDecide__wrapper__(rrr::Request* req, rrr::ServerConnection* sconn) {
+        parid_t* in_0 = new parid_t;
+        req->m >> *in_0;
+        uint64_t* in_1 = new uint64_t;
+        req->m >> *in_1;
+        ballot_t* in_2 = new ballot_t;
+        req->m >> *in_2;
+        MarshallDeputy* in_3 = new MarshallDeputy;
+        req->m >> *in_3;
+        std::vector<uint16_t>* in_4 = new std::vector<uint16_t>;
+        req->m >> *in_4;
+        auto __marshal_reply__ = [=] {
+        };
+        auto __cleanup__ = [=] {
+            delete in_0;
+            delete in_1;
+            delete in_2;
+            delete in_3;
+            delete in_4;
+        };
+        rrr::DeferredReply* __defer__ = new rrr::DeferredReply(req, sconn, __marshal_reply__, __cleanup__);
+        this->CrpcDecide(*in_0, *in_1, *in_2, *in_3, *in_4, __defer__);
     }
 };
 
@@ -921,22 +950,43 @@ public:
         __fu__->release();
         return __ret__;
     }
+    rrr::Future* async_CrpcDecide(const parid_t& par_id, const uint64_t& slot_id, const ballot_t& ballot, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const rrr::FutureAttr& __fu_attr__ = rrr::FutureAttr()) {
+        rrr::Future* __fu__ = __cl__->begin_request(MultiPaxosService::CRPCDECIDE, __fu_attr__);
+        if (__fu__ != nullptr) {
+            *__cl__ << par_id;
+            *__cl__ << slot_id;
+            *__cl__ << ballot;
+            *__cl__ << cmd;
+            *__cl__ << addrChain;
+        }
+        __cl__->end_request();
+        return __fu__;
+    }
+    rrr::i32 CrpcDecide(const parid_t& par_id, const uint64_t& slot_id, const ballot_t& ballot, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain) {
+        rrr::Future* __fu__ = this->async_CrpcDecide(par_id, slot_id, ballot, cmd, addrChain);
+        if (__fu__ == nullptr) {
+            return ENOTCONN;
+        }
+        rrr::i32 __ret__ = __fu__->get_error_code();
+        __fu__->release();
+        return __ret__;
+    }
 };
 
 class FpgaRaftService: public rrr::Service {
 public:
     enum {
-        HEARTBEAT = 0x3506cdc2,
-        FORWARD = 0x168818a7,
-        VOTE = 0x5ed0a08b,
-        VOTE2FPGA = 0x1aaf148b,
-        APPENDENTRIES = 0x20032170,
-        CRPCAPPENDENTRIES = 0x3b377a41,
-        CRPCAPPENDENTRIES3 = 0x41df6e37,
-        APPENDENTRIES2 = 0x16b1c281,
-        DECIDE = 0x1d3c3f09,
-        CRPCDECIDE = 0x3331b4a0,
-        CRPC = 0x5eaf30d0,
+        HEARTBEAT = 0x5b4ebc70,
+        FORWARD = 0x4ea83b55,
+        VOTE = 0x40e8d1ee,
+        VOTE2FPGA = 0x388ef5c2,
+        APPENDENTRIES = 0x4fe30732,
+        CRPCAPPENDENTRIES = 0x55801d98,
+        CRPCAPPENDENTRIES3 = 0x13c0b722,
+        APPENDENTRIES2 = 0x4b260318,
+        DECIDE = 0x6fdae503,
+        CRPCDECIDE = 0x604e0f16,
+        CRPC = 0x5b756626,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -1592,11 +1642,11 @@ public:
 class CopilotService: public rrr::Service {
 public:
     enum {
-        FORWARD = 0x443a84e3,
-        PREPARE = 0x5ccff700,
-        FASTACCEPT = 0x2afec21b,
-        ACCEPT = 0x65bc09f4,
-        COMMIT = 0x1f5daa77,
+        FORWARD = 0x13f84fa0,
+        PREPARE = 0x2489b6d5,
+        FASTACCEPT = 0x45ddc372,
+        ACCEPT = 0x392a5f71,
+        COMMIT = 0x32035c15,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -1882,8 +1932,8 @@ public:
 class SampleCrpcService: public rrr::Service {
 public:
     enum {
-        CRPCADD = 0x2e85daa9,
-        BROADCASTADD = 0x2ae97335,
+        CRPCADD = 0x5a5dd0b0,
+        BROADCASTADD = 0x55de12a3,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -2006,47 +2056,47 @@ public:
 class ClassicService: public rrr::Service {
 public:
     enum {
-        MSGSTRING = 0x6a8e0295,
-        MSGMARSHALL = 0x407fee3f,
-        REELECT = 0x4a82d1e4,
-        DISPATCH = 0x3601d02b,
-        PREPARE = 0x102e04c4,
-        COMMIT = 0x3e959e81,
-        ABORT = 0x17c8a12d,
-        EARLYABORT = 0x67b40ee9,
-        UPGRADEEPOCH = 0x47b022b2,
-        TRUNCATEEPOCH = 0x67f79ccb,
-        ISLEADER = 0x1ffe3d0e,
-        ISFPGALEADER = 0x6a0327d4,
-        SIMPLECMD = 0x58bf2f78,
-        FAILOVERTRIG = 0x32a3f3b9,
-        RPC_NULL = 0x1dc4c7ae,
-        TAPIRACCEPT = 0x13abeb33,
-        TAPIRFASTACCEPT = 0x69c0db90,
-        TAPIRDECIDE = 0x25c7f27a,
-        CAROUSELREADANDPREPARE = 0x3176a6fd,
-        CAROUSELACCEPT = 0x1e7eaa7f,
-        CAROUSELFASTACCEPT = 0x5018dce4,
-        CAROUSELDECIDE = 0x4318761b,
-        RCCDISPATCH = 0x6b5162ce,
-        RCCFINISH = 0x21ef7526,
-        RCCINQUIRE = 0x6ead3e43,
-        RCCDISPATCHRO = 0x3b691735,
-        RCCINQUIREVALIDATION = 0x23fd9add,
-        RCCNOTIFYGLOBALVALIDATION = 0x5518e7a8,
-        JANUSDISPATCH = 0x370e79e8,
-        RCCCOMMIT = 0x35d29c1c,
-        JANUSCOMMIT = 0x1d8a8e94,
-        JANUSCOMMITWOGRAPH = 0x6096e5d9,
-        JANUSINQUIRE = 0x25ca71d3,
-        RCCPREACCEPT = 0x1b366447,
-        JANUSPREACCEPT = 0x3f92f8fd,
-        JANUSPREACCEPTWOGRAPH = 0x1b0202ab,
-        RCCACCEPT = 0x68e90de9,
-        JANUSACCEPT = 0x2e709987,
-        PREACCEPTFEBRUUS = 0x3a25d28e,
-        ACCEPTFEBRUUS = 0x64fa9018,
-        COMMITFEBRUUS = 0x5d379bf1,
+        MSGSTRING = 0x2e14ef36,
+        MSGMARSHALL = 0x1dea07ef,
+        REELECT = 0x3dbd829a,
+        DISPATCH = 0x3e9d16a4,
+        PREPARE = 0x2f14a1d0,
+        COMMIT = 0x57dfd2c1,
+        ABORT = 0x26b94ec1,
+        EARLYABORT = 0x41333534,
+        UPGRADEEPOCH = 0x3f8f49b4,
+        TRUNCATEEPOCH = 0x154401ca,
+        ISLEADER = 0x3cd3bcf6,
+        ISFPGALEADER = 0x373de69a,
+        SIMPLECMD = 0x4df2ae0d,
+        FAILOVERTRIG = 0x18bea7ee,
+        RPC_NULL = 0x24c558b2,
+        TAPIRACCEPT = 0x46980156,
+        TAPIRFASTACCEPT = 0x136f08f9,
+        TAPIRDECIDE = 0x4efa3465,
+        CAROUSELREADANDPREPARE = 0x6cddfe4e,
+        CAROUSELACCEPT = 0x6231dc22,
+        CAROUSELFASTACCEPT = 0x13459adc,
+        CAROUSELDECIDE = 0x355a5a9a,
+        RCCDISPATCH = 0x60cb9798,
+        RCCFINISH = 0x3799fda3,
+        RCCINQUIRE = 0x5e2a93eb,
+        RCCDISPATCHRO = 0x3ad13a7e,
+        RCCINQUIREVALIDATION = 0x4aa2b89f,
+        RCCNOTIFYGLOBALVALIDATION = 0x19fe74b9,
+        JANUSDISPATCH = 0x6f159c96,
+        RCCCOMMIT = 0x310c5226,
+        JANUSCOMMIT = 0x57a51021,
+        JANUSCOMMITWOGRAPH = 0x22fd647c,
+        JANUSINQUIRE = 0x55122c23,
+        RCCPREACCEPT = 0x6bac79d8,
+        JANUSPREACCEPT = 0x6de765ef,
+        JANUSPREACCEPTWOGRAPH = 0x2c2801db,
+        RCCACCEPT = 0x5b25664f,
+        JANUSACCEPT = 0x46f232f3,
+        PREACCEPTFEBRUUS = 0x4457f17d,
+        ACCEPTFEBRUUS = 0x28e644b0,
+        COMMITFEBRUUS = 0x6c2125a1,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -3886,10 +3936,10 @@ public:
 class ServerControlService: public rrr::Service {
 public:
     enum {
-        SERVER_SHUTDOWN = 0x5d4c6c90,
-        SERVER_READY = 0x2e5ca516,
-        SERVER_HEART_BEAT_WITH_DATA = 0x6a905a6e,
-        SERVER_HEART_BEAT = 0x3d39ce7d,
+        SERVER_SHUTDOWN = 0x3b6e8e3d,
+        SERVER_READY = 0x4399e00a,
+        SERVER_HEART_BEAT_WITH_DATA = 0x4a18c39e,
+        SERVER_HEART_BEAT = 0x1696a56c,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -4032,14 +4082,14 @@ public:
 class ClientControlService: public rrr::Service {
 public:
     enum {
-        CLIENT_GET_TXN_NAMES = 0x2982ea35,
-        CLIENT_SHUTDOWN = 0x5bf2be10,
-        CLIENT_FORCE_STOP = 0x150e8989,
-        CLIENT_RESPONSE = 0x594bdf74,
-        CLIENT_READY = 0x39348088,
-        CLIENT_READY_BLOCK = 0x5b858b58,
-        CLIENT_START = 0x1d0fe171,
-        DISPATCHTXN = 0x5a15e4c6,
+        CLIENT_GET_TXN_NAMES = 0x5dc33529,
+        CLIENT_SHUTDOWN = 0x355ca03d,
+        CLIENT_FORCE_STOP = 0x187ea853,
+        CLIENT_RESPONSE = 0x514d0709,
+        CLIENT_READY = 0x525c837a,
+        CLIENT_READY_BLOCK = 0x153b05ab,
+        CLIENT_START = 0x2ea46c05,
+        DISPATCHTXN = 0x4f349083,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;

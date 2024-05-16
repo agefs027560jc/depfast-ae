@@ -3,15 +3,15 @@
 set -e
 
 # Server counts to iterate over
-server_counts=(25 21 3 5 9 13 17)
+server_counts=(3 5 9 13 17 21 25)
 # server_counts=(13)
 
 # Values for -v option
 v_values=(2 0)
 
 # Initialize output files with new headers
-echo "server_count, run_id, throughput, 50%_lat, 90%_lat, 99%_lat, 99.9%_lat, bw_util" > broadcast_testcommitissue_output_raft_10B_docker.txt
-echo "server_count, run_id, throughput, 50%_lat, 90%_lat, 99%_lat, 99.9%_lat, bw_util" > chaining_testcommitissue_output_raft_10B_docker.txt
+echo "server_count, run_id, throughput, 50%_lat, 90%_lat, 99%_lat, 99.9%_lat, bw_util" > broadcast_testcommitissue_output_raft_docker.txt
+echo "server_count, run_id, throughput, 50%_lat, 90%_lat, 99%_lat, 99.9%_lat, bw_util" > chaining_testcommitissue_output_raft_docker.txt
 
 # Setup and run Docker containers for each configuration
 for server_count in "${server_counts[@]}"; do
@@ -19,10 +19,10 @@ for server_count in "${server_counts[@]}"; do
     for v_value in "${v_values[@]}"; do
         # Determine the output file based on the -v value
         if [ "$v_value" -eq 2 ]; then
-            output_file="chaining_testcommitissue_output_raft_10B_docker.txt"
+            output_file="chaining_testcommitissue_output_raft_docker.txt"
             output_node="output_first_node_chaining_raft.txt"
         else
-            output_file="broadcast_testcommitissue_output_raft_10B_docker.txt"
+            output_file="broadcast_testcommitissue_output_raft_docker.txt"
             output_node="output_first_node_broadcast_raft.txt"
         fi
 
@@ -106,3 +106,7 @@ for server_count in "${server_counts[@]}"; do
 done
 
 echo "Benchmarking complete for all server configurations."
+echo "broadcast"
+cat broadcast_testcommitissue_output_raft_docker.txt
+echo "chaining"
+cat chaining_testcommitissue_output_raft_docker.txt

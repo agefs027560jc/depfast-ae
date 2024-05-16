@@ -92,6 +92,19 @@ class MultiPaxosCommo : public Communicator {
                        const slotid_t slot_id,
                        const ballot_t ballot,
                        const shared_ptr<Marshallable> cmd);
+
+  void CrpcDecide(const parid_t par_id,
+                  const siteid_t leader_site_id,
+                  const slotid_t slot_id,
+                  const ballot_t ballot,
+                  const shared_ptr<Marshallable> cmd);
+
+  void CrpcProxyDecide(const parid_t par_id,
+                       const slotid_t slot_id,
+                       const ballot_t ballot,
+                       const MarshallDeputy& cmd,
+                       const std::vector<uint16_t>& addrChain,
+                       const vector<PaxosMessage> state);
 };
 
 } // namespace janus

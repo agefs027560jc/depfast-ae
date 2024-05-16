@@ -10,8 +10,8 @@ server_counts=(3 5 9 13 17 21 25)
 v_values=(0 2)
 
 # Initialize output files with new headers
-echo "server_count, run_id, throughput, 50%_lat, 90%_lat, 99%_lat, 99.9%_lat, bw_util" > broadcast_testcommitissue_output_paxos_10B_docker.txt
-echo "server_count, run_id, throughput, 50%_lat, 90%_lat, 99%_lat, 99.9%_lat, bw_util" > chaining_testcommitissue_output_paxos_10B_docker.txt
+echo "server_count, run_id, throughput, 50%_lat, 90%_lat, 99%_lat, 99.9%_lat, bw_util" > broadcast_testcommitissue_output_paxos_docker.txt
+echo "server_count, run_id, throughput, 50%_lat, 90%_lat, 99%_lat, 99.9%_lat, bw_util" > chaining_testcommitissue_output_paxos_docker.txt
 
 # Setup and run Docker containers for each configuration
 for server_count in "${server_counts[@]}"; do
@@ -19,15 +19,15 @@ for server_count in "${server_counts[@]}"; do
     for v_value in "${v_values[@]}"; do
         # Determine the output file based on the -v value
         if [ "$v_value" -eq 2 ]; then
-            output_file="chaining_testcommitissue_output_paxos_10B_docker.txt"
+            output_file="chaining_testcommitissue_output_paxos_docker.txt"
             output_node="output_node_chaining_paxos.txt"
         else
-            output_file="broadcast_testcommitissue_output_paxos_10B_docker.txt"
+            output_file="broadcast_testcommitissue_output_paxos_docker.txt"
             output_node="output_node_broadcast_paxos.txt"
         fi
 
         # Perform the run 3 times for each server count and -v value
-        for run_id in {1..3}; do
+        for run_id in {1..1}; do
             echo "Setting up $server_count Docker containers for run_id $run_id..."
             ./crpc_docker_cleanup.sh
             ./crpc_docker_setup.sh $server_count
@@ -106,3 +106,7 @@ for server_count in "${server_counts[@]}"; do
 done
 
 echo "Benchmarking complete for all server configurations."
+echo "broadcast"
+cat broadcast_testcommitissue_output_paxos_docker.txt
+echo "chaining"
+cat chaining_testcommitissue_output_paxos_docker.txt

@@ -67,6 +67,13 @@ abstract service MultiPaxos {
   defer Decide(uint64_t slot,
                ballot_t ballot,
                MarshallDeputy cmd);
+
+  defer CrpcDecide(parid_t par_id,
+                   uint64_t slot_id,
+                   ballot_t ballot,
+                   MarshallDeputy cmd,
+                   vector<uint16_t> addrChain,
+                   vector<PaxosMessage> state);
 	       
 }
 
@@ -183,6 +190,16 @@ abstract service Copilot {
                    DepId dep_id |
                    ballot_t max_ballot,
                    uint64_t ret_dep);
+
+  defer CrpcFastAccept(uint64_t id,
+                       uint8_t is_pilot,
+                      uint64_t slot,
+                      ballot_t ballot,
+                      uint64_t dep,
+                      MarshallDeputy cmd,
+                      DepId dep_id,
+                      vector<uint16_t> addrChain,
+                      vector<CopilotMessage> state);
 
   defer Accept(uint8_t is_pilot,
                uint64_t slot,
@@ -457,6 +474,11 @@ struct ResultAdd {
 struct PaxosMessage {
   ballot_t max_ballot;
   uint64_t coro_id;
+}
+
+struct CopilotMessage {
+  ballot_t max_ballot;
+  uint64_t ret_dep;
 }
 
 abstract service ClientControl {

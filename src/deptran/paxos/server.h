@@ -77,6 +77,13 @@ class PaxosServer : public TxLogServer {
                 const ballot_t ballot,
                 shared_ptr<Marshallable> &cmd);
 
+  void OnCrpcCommit(const parid_t par_id,
+                    const slotid_t slot_id,
+                    const ballot_t ballot,
+                    const MarshallDeputy& cmd,
+                    const std::vector<uint16_t>& addrChain,
+                    const vector<PaxosMessage> state);
+
   virtual bool HandleConflicts(Tx& dtxn,
                                innid_t inn_id,
                                vector<string>& conflicts) {

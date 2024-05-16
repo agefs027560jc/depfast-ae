@@ -272,7 +272,7 @@ void ServerWorker::StartBenchmark(){
     std::vector<double> latency_manager;
     bool isTime1Passed = false;
     bool isTime2Passed = false;
-    std::string payload(10, 'a');
+    std::string payload(1000, 'a');
     auto cnt33 = 0;
     auto cnt66 = 0;
     while(true){

@@ -31,7 +31,7 @@ class MultiPaxosServiceImpl : public MultiPaxosService {
                rrr::DeferredReply* defer) override;
 
   void Accept(const uint64_t& slot,
-	      const uint64_t& time,
+	          const uint64_t& time,
               const ballot_t& ballot,
               const MarshallDeputy& cmd,
               ballot_t* max_ballot,
@@ -39,18 +39,26 @@ class MultiPaxosServiceImpl : public MultiPaxosService {
               rrr::DeferredReply* defer) override;
 
   void CrpcAccept(const uint64_t& id,
-              const uint64_t& slot,
-	          const uint64_t& time,
-              const ballot_t& ballot,
-              const MarshallDeputy& cmd,
-              const std::vector<uint16_t>& addrChain,
-              const vector<PaxosMessage>& state,
-              rrr::DeferredReply* defer) override;
+                  const uint64_t& slot,
+                  const uint64_t& time,
+                  const ballot_t& ballot,
+                  const MarshallDeputy& cmd,
+                  const std::vector<uint16_t>& addrChain,
+                  const vector<PaxosMessage>& state,
+                  rrr::DeferredReply* defer) override;
 
   void Decide(const uint64_t& slot,
               const ballot_t& ballot,
               const MarshallDeputy& cmd,
               rrr::DeferredReply* defer) override;
+
+  void CrpcDecide(const parid_t& par_id,
+                  const slotid_t& slot_id,
+                  const ballot_t& ballot,
+                  const MarshallDeputy& cmd,
+                  const std::vector<uint16_t>& addrChain,
+                  const vector<PaxosMessage>& state,
+                  rrr::DeferredReply* defer) override;
 
 };
 
