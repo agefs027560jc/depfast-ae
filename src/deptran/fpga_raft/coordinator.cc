@@ -104,7 +104,7 @@ void CoordinatorFpgaRaft::AppendEntries() {
                                                      this->sch_->commitIndex,
                                                      cmd_);
     }
-    else if (Config::GetConfig()->get_cRPC_version() == 2) {
+    else if (Config::GetConfig()->get_cRPC_version() == 1) {
       sp_quorum = commo()->crpc_ring_BroadcastAppendEntries(par_id_,
                                                      this->sch_->site_id_,
                                                      slot_id_,
@@ -118,20 +118,20 @@ void CoordinatorFpgaRaft::AppendEntries() {
                                                      this->sch_->commitIndex,
                                                      cmd_);
     }
-    else{
-      sp_quorum = commo()->crpc_BroadcastAppendEntries(par_id_,
-                                                     this->sch_->site_id_,
-                                                     slot_id_,
-                                                     dep_id_,
-                                                     curr_ballot_,
-                                                     this->sch_->IsLeader(),
-                                                     this->sch_->currentTerm,
-                                                     prevLogIndex,
-                                                     prevLogTerm,
-                                                     /* ents, */
-                                                     this->sch_->commitIndex,
-                                                     cmd_);
-    }
+    // else{
+    //   sp_quorum = commo()->crpc_BroadcastAppendEntries(par_id_,
+    //                                                  this->sch_->site_id_,
+    //                                                  slot_id_,
+    //                                                  dep_id_,
+    //                                                  curr_ballot_,
+    //                                                  this->sch_->IsLeader(),
+    //                                                  this->sch_->currentTerm,
+    //                                                  prevLogIndex,
+    //                                                  prevLogTerm,
+    //                                                  /* ents, */
+    //                                                  this->sch_->commitIndex,
+    //                                                  cmd_);
+    // }
     
 
 		// struct timespec start_, end_;
@@ -237,7 +237,7 @@ void CoordinatorFpgaRaft::LeaderLearn() {
     if (Config::GetConfig()->get_cRPC_version() == 0){
       commo()->BroadcastDecide(par_id_, slot_id_, dep_id_, curr_ballot_, sp_m);
     }
-    else {
+    else if (Config::GetConfig()->get_cRPC_version() == 1){
       commo()->CrpcDecide(par_id_, this->sch_->site_id_, slot_id_, dep_id_, curr_ballot_, sp_m);
     }
     verify(phase_ == Phase::COMMIT);

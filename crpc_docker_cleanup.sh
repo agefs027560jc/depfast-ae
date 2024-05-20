@@ -4,7 +4,7 @@
 network_name="nano_net"
 subnet="172.20.0.0/16"
 base_ip="172.20.0."
-image_name="llvan/microbench"
+image_name="llvan/nanobench"
 start_ip=10
 number_of_nodes=5 # Number of nodes passed as the first script argument
 
@@ -15,6 +15,7 @@ number_of_nodes=5 # Number of nodes passed as the first script argument
 
 # Function to stop and remove all containers
 cleanup_containers() {
+    wait
     echo "Stopping and removing existing containers..."
     sudo docker ps -a --filter "name=nano_" --format "{{.Names}}" | xargs -r sudo docker stop
     sudo docker ps -a --filter "name=nano_" --format "{{.Names}}" | xargs -r sudo docker rm
