@@ -48,7 +48,8 @@ class MarshallDeputy {
     CMD_SAMPLE_CRPC_APPEND_ENTRIES = 14, // sample cRPC appendEntries
     CMD_SAMPLE_CRPC_APPEND_ENTRIES_STATE = 15, // sample cRPC appendEntries
     CMD_TPC_RAFT_SAMPLE_CMD = 16,
-    CMD_TPC_PAXOS_SAMPLE_CMD = 17
+    CMD_TPC_PAXOS_SAMPLE_CMD = 17,
+    CMD_TPC_COPILOT_SAMPLE_CMD = 18
   };
   /**
    * This should be called by the rpc layer.

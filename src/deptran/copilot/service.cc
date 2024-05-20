@@ -59,6 +59,23 @@ void CopilotServiceImpl::FastAccept(const uint8_t& is_pilot,
   // });
 }
 
+void CopilotServiceImpl::CrpcFastAccept(const uint64_t& id,
+                                        const uint8_t& is_pilot,
+                                        const uint64_t& slot,
+                                        const ballot_t& ballot,
+                                        const uint64_t& dep,
+                                        const MarshallDeputy& cmd,
+                                        const struct DepId& dep_id,
+                                        const std::vector<uint16_t>& addrChain,
+                                        const vector<CopilotMessage>& state,
+                                        rrr::DeferredReply* defer) {
+  verify(sched_);
+  auto coro = Coroutine::CreateRun([&]() {
+    sched_->OnCrpcFastAccept(id, is_pilot, slot, ballot, dep, cmd, dep_id, addrChain, state);
+    // defer->reply();
+  });
+}
+
 void CopilotServiceImpl::Accept(const uint8_t& is_pilot,
                                 const uint64_t& slot,
                                 const ballot_t& ballot,
@@ -91,6 +108,20 @@ void CopilotServiceImpl::Commit(const uint8_t& is_pilot,
                      const_cast<MarshallDeputy&>(cmd).sp_data_);
     defer->reply();
   // });
+}
+
+void CopilotServiceImpl::CrpcCommit(const uint8_t& is_pilot,
+                                    const uint64_t& slot,
+                                    const uint64_t& dep,
+                                    const MarshallDeputy& cmd,
+                                    const std::vector<uint16_t>& addrChain,
+                                    const vector<CopilotMessage>& state,
+                                    rrr::DeferredReply* defer) {
+  verify(sched_);
+  auto coro = Coroutine::CreateRun([&]() {
+    sched_->OnCrpcCommit(is_pilot, slot, dep, cmd, addrChain, state);
+    // defer->reply();
+  });
 }
 
 } // namespace janus

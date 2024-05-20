@@ -22,8 +22,9 @@ bool FreeDangling(Communicator* comm, vector<std::pair<uint16_t, rrr::i64> > &da
 CoordinatorCopilot::CoordinatorCopilot(uint32_t coo_id,
                                        int32_t benchmark,
                                        ClientControlServiceImpl *ccsi,
-                                       uint32_t thread_id)
-  : Coordinator(coo_id, benchmark, ccsi, thread_id) {}
+                                       uint32_t thread_id) : Coordinator(coo_id, benchmark, ccsi, thread_id) {
+
+  }
 
 CoordinatorCopilot::~CoordinatorCopilot() {
   // Log_debug("copilot coord %d destroyed", (int)coo_id_);
@@ -82,10 +83,9 @@ start_prepare:
   // sq_quorum->id_ = dep_id_;
 
   sq_quorum->Wait();
-#ifdef DO_FINALIZE
-  sq_quorum->Finalize(finalize_timeout_us,
-                      std::bind(FreeDangling, commo(), std::placeholders::_1));
-#endif
+  #ifdef DO_FINALIZE
+  sq_quorum->Finalize(finalize_timeout_us, std::bind(FreeDangling, commo(), std::placeholders::_1));
+  #endif
   // sq_quorum->log();
   auto curr_ins = sch_->GetInstance(slot_id_, is_pilot_);
   if(!curr_ins)
@@ -145,8 +145,7 @@ start_prepare:
   } else {
     // retry with higher ballot number
     sq_quorum->Show();
-    Log_warn("%s : %lu Prepare failed, retry",
-              indicator[is_pilot_], slot_id_);
+    Log_warn("%s : %lu Prepare failed, retry", indicator[is_pilot_], slot_id_);
     goto start_prepare;
   }
 
@@ -159,32 +158,35 @@ start_prepare:
 }
 
 void CoordinatorCopilot::FastAccept() {
+  static uint64_t cnta_ = 0;   // TODO
   std::lock_guard<std::recursive_mutex> lock(mtx_);
   static_cast<CopilotFrame*>(frame_)->n_fast_accept_++;
   if ((static_cast<CopilotFrame*>(frame_)->n_fast_accept_ & 0xfff) == 0)
-      Log_info("fast/reg/total %u/%u/%u", static_cast<CopilotFrame*>(frame_)->n_fast_path_,
-        static_cast<CopilotFrame*>(frame_)->n_regular_path_,
-        static_cast<CopilotFrame*>(frame_)->n_fast_accept_);
-  Log_debug(
-      "Copilot coordinator %u broadcast FAST_ACCEPT, "
-      "partition: %u, %s : %lu -> %lu",
-      coo_id_, par_id_, indicator[is_pilot_], slot_id_, dep_);
-      // dynamic_pointer_cast<TpcCommitCommand>(cmd_now_)->tx_id_);
+    // Log_info("fast/reg/total %u/%u/%u", static_cast<CopilotFrame*>(frame_)->n_fast_path_,
+      // static_cast<CopilotFrame*>(frame_)->n_regular_path_,
+      // static_cast<CopilotFrame*>(frame_)->n_fast_accept_);
+    Log_debug( "Copilot coordinator %u broadcast FAST_ACCEPT, ", "partition: %u, %s : %lu -> %lu", coo_id_, par_id_, indicator[is_pilot_], slot_id_, dep_);
+    // dynamic_pointer_cast<TpcCommitCommand>(cmd_now_)->tx_id_);
   begin = Time::now(true);
-  auto sq_quorum = commo()->BroadcastFastAccept(par_id_,
-                                                is_pilot_, slot_id_,
-                                                curr_ballot_,
-                                                dep_,
-                                                cmd_now_);
+  auto start = chrono::system_clock::now();
+  shared_ptr<CopilotFastAcceptQuorumEvent> sq_quorum;
+  if (Config::GetConfig()->get_cRPC_version() == 5){
+    sq_quorum = commo()->BroadcastFastAccept(par_id_, is_pilot_, slot_id_, curr_ballot_, dep_, cmd_now_);
+    // sq_quorum = commo()->CrpcFastAccept(par_id_, static_cast<CopilotFrame*>(frame_)->site_info_->id, is_pilot_, slot_id_, curr_ballot_, dep_, cmd_now_);
+  } else if (Config::GetConfig()->get_cRPC_version() == 4){
+    sq_quorum = commo()->BroadcastFastAccept(par_id_, is_pilot_, slot_id_, curr_ballot_, dep_, cmd_now_);
+  }
   // sq_quorum->id_ = dep_id_;
   // Log_debug("current coroutine's dep_id: %d", Coroutine::CurrentCoroutine()->dep_id_);
 
   sq_quorum->Wait();
   fac = Time::now(true) - begin;
-#ifdef DO_FINALIZE
-  sq_quorum->Finalize(finalize_timeout_us,
-                      std::bind(FreeDangling, commo(), std::placeholders::_1));
-#endif
+  auto end = chrono::system_clock::now();
+  auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
+  #ifdef DO_FINALIZE
+  sq_quorum->Finalize(finalize_timeout_us, std::bind(FreeDangling, commo(), std::placeholders::_1));
+  #endif
+  if (cnta_++ % 100000 == 0) Log_info("Duration of Wait() in Accept() is: %d; %d", duration.count(), cnta_);
   // cout << "fac";
   // sq_quorum->Log();
 
@@ -269,19 +271,20 @@ void CoordinatorCopilot::Commit() {
   std::lock_guard<std::recursive_mutex> lock(mtx_);
   static_cast<CopilotFrame*>(frame_)->n_commit_++;
   verify(current_phase_ == Phase::COMMIT);
-  commit_callback_();
-  Log_debug("Copilot coordinator %u broadcast COMMIT for partition: %d, %s : %lu -> %lu",
-            coo_id_, (int)par_id_, indicator[is_pilot_], slot_id_, dep_);
+  // commit_callback_();
+  Log_debug("Copilot coordinator %u broadcast COMMIT for partition: %d, %s : %lu -> %lu", coo_id_, (int)par_id_, indicator[is_pilot_], slot_id_, dep_);
 
-  auto sp_quorum = commo()->BroadcastCommit(par_id_,
-                                            is_pilot_, slot_id_,
-                                            dep_,
-                                            cmd_now_);
+  shared_ptr<CopilotFakeQuorumEvent> sp_quorum;
+  if (Config::GetConfig()->get_cRPC_version() == 5){
+    sp_quorum = commo()->CrpcCommit(par_id_, static_cast<CopilotFrame*>(frame_)->site_info_->id, is_pilot_, slot_id_, dep_, cmd_now_);
+  } else if (Config::GetConfig()->get_cRPC_version() == 4){
+    sp_quorum = commo()->BroadcastCommit(par_id_, is_pilot_, slot_id_, dep_, cmd_now_);
+  }
+
   sp_quorum->Wait();  // in fact this doesn't wait since it's a fake quorum event
-#ifdef DO_FINALIZE
-  sp_quorum->Finalize(finalize_timeout_us,
-                      std::bind(FreeDangling, commo(), std::placeholders::_1));
-#endif
+  #ifdef DO_FINALIZE
+  sp_quorum->Finalize(finalize_timeout_us, std::bind(FreeDangling, commo(), std::placeholders::_1));
+  #endif
   /**
    * A pilot sets a takeover-timeout when it has a committed
    * command but does not know the final dependencies of all

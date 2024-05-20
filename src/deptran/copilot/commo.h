@@ -87,6 +87,7 @@ friend class CopilotProxy;
   static int maxFailure(int total);
 
  public:
+  std::unordered_map<uint64_t, shared_ptr<CopilotFastAcceptQuorumEvent>> cRPCEvents {};
   CopilotCommo() = delete;
   CopilotCommo(PollMgr *);
 
@@ -103,6 +104,25 @@ friend class CopilotProxy;
                       ballot_t ballot,
                       uint64_t dep,
                       shared_ptr<Marshallable> cmd);
+  
+  shared_ptr<CopilotFastAcceptQuorumEvent>
+  CrpcFastAccept(parid_t par_id,
+                 siteid_t leader_site_id,
+                 uint8_t is_pilot,
+                 slotid_t slot_id,
+                 ballot_t ballot,
+                 uint64_t dep,
+                 shared_ptr<Marshallable> cmd);
+
+  void CrpcProxyFastAccept(const uint64_t& id,
+                           const uint8_t& is_pilot,
+                           const uint64_t& slot,
+                           const ballot_t& ballot,
+                           const uint64_t& dep,
+                           const MarshallDeputy& cmd,
+                           const struct DepId& dep_id,
+                           const std::vector<uint16_t>& addrChain,
+                           const vector<CopilotMessage>& state);
 
   shared_ptr<CopilotAcceptQuorumEvent>
   BroadcastAccept(parid_t par_id,
@@ -118,7 +138,21 @@ friend class CopilotProxy;
                        slotid_t slot_id,
                        uint64_t dep,
                        shared_ptr<Marshallable> cmd);
+  
+  shared_ptr<CopilotFakeQuorumEvent>
+  CrpcCommit(const parid_t par_id,
+             const siteid_t leader_site_id,
+             const uint8_t is_pilot,
+             const slotid_t slot_id,
+             const uint64_t dep,
+             const shared_ptr<Marshallable> cmd);
 
+  void CrpcProxyCommit(const uint8_t is_pilot,
+                  const slotid_t slot_id,
+                  const uint64_t dep,
+                  const MarshallDeputy& cmd,
+                  const std::vector<uint16_t>& addrChain,
+                  const vector<CopilotMessage> state);
 };
 
 }  // namespace janus

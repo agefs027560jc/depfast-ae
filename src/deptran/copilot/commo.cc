@@ -19,6 +19,7 @@ void CopilotFastAcceptQuorumEvent::FeedResponse(bool y, bool ok) {
 }
 
 void CopilotFastAcceptQuorumEvent::FeedRetDep(uint64_t dep) {
+  // Log_info("Tracepath I: %d, %d",ret_deps_.size(), n_total_);
   verify(ret_deps_.size() < n_total_);
   ret_deps_.push_back(dep);
 }
@@ -193,6 +194,108 @@ CopilotCommo::BroadcastFastAccept(parid_t par_id,
   return e;
 }
 
+shared_ptr<CopilotFastAcceptQuorumEvent>
+CopilotCommo::CrpcFastAccept(parid_t par_id,
+                             siteid_t leader_site_id,
+                             uint8_t is_pilot,
+                             slotid_t slot_id,
+                             ballot_t ballot,
+                             uint64_t dep,
+                             shared_ptr<Marshallable> cmd) {
+  int n = Config::GetConfig()->GetPartitionSize(par_id);
+  auto e = Reactor::CreateSpEvent<CopilotFastAcceptQuorumEvent>(n, fastQuorumSize(n));
+  auto proxies = rpc_par_proxies_[par_id];
+  struct DepId di;
+
+  // WAN_WAIT
+  std::vector<uint16_t> sitesInfo_; // additional; looks like can be computed in cRPC call
+
+  for (auto& p : proxies) {
+    auto id = p.first;
+    auto proxy = (CopilotProxy*) p.second;
+    if (id != leader_site_id) { // #cPRC additional
+      sitesInfo_.push_back(id); // #cPRC additional
+    }                           // #cPRC additional
+		//clients.push_back(cli);
+  }
+
+  sitesInfo_.push_back(leader_site_id); // #cPRC additional
+
+  for (auto& p : proxies) {
+    auto proxy = (CopilotProxy *)p.second;
+    auto site = p.first;
+	  if (p.first == leader_site_id) {
+        // fix the 1c1s1p bug
+        // Log_info("leader_site_id %d", leader_site_id);
+        e->FeedResponse(true, true);
+        continue;
+    }
+
+    // crpc_id generation is also not abstracted
+    uint64_t crpc_id = reinterpret_cast<uint64_t>(&e);
+    // // Log_info("*** crpc_id is: %d", crpc_id); // verify it's never the same
+    verify(cRPCEvents.find(crpc_id) == cRPCEvents.end());
+
+    verify(cmd);
+    MarshallDeputy md(cmd);
+    std::vector<CopilotMessage> state;
+
+    #ifdef SKIP
+        if (site == 1) continue;
+    #endif
+  
+    if (site == loc_id_) {
+      ballot_t b;
+      slotid_t sgst_dep;
+      static_cast<CopilotServer *>(rep_sched_)->OnCrpcFastAccept(crpc_id, is_pilot, slot_id, ballot, dep, md, di, sitesInfo_, state);
+      e->FeedResponse(true, true);
+      e->FeedRetDep(dep);
+    } else {
+      // FutureAttr fuattr;
+      // fuattr.callback = [e, dep, ballot, site](Future *fu) {
+      //   ballot_t b;
+      //   slotid_t sgst_dep;
+
+      //   fu->get_reply() >> b >> sgst_dep;
+      //   bool ok = (ballot == b);
+      //   e->FeedResponse(ok, sgst_dep == dep);
+      //   if (ok) {
+      //     e->FeedRetDep(sgst_dep);
+      //   }
+
+      //   e->RemoveXid(site);
+      // };
+
+      auto f = proxy->async_CrpcFastAccept(crpc_id, is_pilot, slot_id, ballot, dep, md, di, sitesInfo_, state);
+      // e->AddXid(site, f->get_xid());
+      Future::safe_release(f);
+
+      // this too should be abstracted
+      cRPCEvents[crpc_id] = e;
+
+      // rather than breaking, do something else; when iterating through proxies
+      break;
+    }
+  }
+  // verify(!e->IsReady());
+  return e;
+}
+
+void CopilotCommo::CrpcProxyFastAccept(const uint64_t& id,
+                                       const uint8_t& is_pilot,
+                                       const uint64_t& slot,
+                                       const ballot_t& ballot,
+                                       const uint64_t& dep,
+                                       const MarshallDeputy& cmd,
+                                       const struct DepId& dep_id,
+                                       const std::vector<uint16_t>& addrChain,
+                                       const vector<CopilotMessage>& state) {
+
+  auto proxy = (CopilotProxy *)rpc_proxies_[addrChain[0]];
+  auto f = proxy->async_CrpcFastAccept(id, is_pilot, slot, ballot, dep, cmd, dep_id, addrChain, state);
+  Future::safe_release(f);
+}
+
 shared_ptr<CopilotAcceptQuorumEvent>
 CopilotCommo::BroadcastAccept(parid_t par_id,
                               uint8_t is_pilot,
@@ -266,6 +369,76 @@ CopilotCommo::BroadcastCommit(parid_t par_id,
   }
 
   return e;
+}
+
+shared_ptr<CopilotFakeQuorumEvent>
+CopilotCommo::CrpcCommit(parid_t par_id,
+                         siteid_t leader_site_id,
+                         uint8_t is_pilot,
+                         slotid_t slot_id,
+                         uint64_t dep,
+                         shared_ptr<Marshallable> cmd) {
+  int n = Config::GetConfig()->GetPartitionSize(par_id);
+  auto e = Reactor::CreateSpEvent<CopilotFakeQuorumEvent>(n);
+  auto proxies = rpc_par_proxies_[par_id];
+
+  // WAN_WAIT
+  std::vector<uint16_t> sitesInfo_; // additional; looks like can be computed in cRPC call
+  
+  for (auto& p : proxies) {
+    auto proxy = (CopilotProxy*) p.second;
+    auto id = p.first;
+    if (id != leader_site_id) { // #cPRC additional
+      sitesInfo_.push_back(id); // #cPRC additional
+    }                           // #cPRC additional
+		//clients.push_back(cli);
+  }
+
+  sitesInfo_.push_back(leader_site_id); // #cPRC additional
+
+  for (auto& p : proxies) {
+    auto proxy = (CopilotProxy *)p.second;
+    auto site = p.first;
+
+    #ifdef SKIP
+    if (site == 1) continue;
+    #endif
+
+    // FutureAttr fuattr;
+    // fuattr.callback = [e, site](Future* fu) {
+    //   e->RemoveXid(site);
+    // };
+
+    // crpc_id generation is also not abstracted
+    // uint64_t crpc_id = reinterpret_cast<uint64_t>(&e);
+    // // Log_info("*** crpc_id is: %d", crpc_id); // verify it's never the same
+    // verify(cRPCEvents.find(crpc_id) == cRPCEvents.end());
+
+    MarshallDeputy md(cmd);
+    std::vector<CopilotMessage> state;
+    Future *f = proxy->async_CrpcCommit(is_pilot, slot_id, dep, md, sitesInfo_, state);
+    // e->AddXid(site, f->get_xid());
+    Future::safe_release(f);
+
+    // this too should be abstracted
+    // cRPCEvents[crpc_id] = e;
+
+    // rather than breaking, do something else; when iterating through proxies
+    break;
+  }
+
+  return e;
+}
+
+void CopilotCommo::CrpcProxyCommit(const uint8_t is_pilot,
+                                   const slotid_t slot_id,
+                                   const uint64_t dep,
+                                   const MarshallDeputy& cmd,
+                                   const std::vector<uint16_t>& addrChain,
+                                   const vector<CopilotMessage> state) {
+    auto proxy = (CopilotProxy *)rpc_proxies_[addrChain[0]];
+    auto f = proxy->async_CrpcCommit(is_pilot, slot_id, dep, cmd, addrChain, state);
+    Future::safe_release(f);
 }
 
 inline int CopilotCommo::maxFailure(int total) {

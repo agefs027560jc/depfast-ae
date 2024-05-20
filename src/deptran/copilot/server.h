@@ -9,6 +9,7 @@
 #define REVERSE(p) (1 - (p))
 
 namespace janus {
+class CopilotMessage;
 
 const status_t FLAG_TAKEOVER = 0x80000000;
 const status_t CLR_FLAG_TAKEOVER = (~FLAG_TAKEOVER);
@@ -114,6 +115,16 @@ class CopilotServer : public TxLogServer {
                     uint64_t* ret_dep,
                     const function<void()> &cb);
 
+  void OnCrpcFastAccept(const uint64_t& id,
+                        const uint8_t& is_pilot,
+                        const uint64_t& slot,
+                        const ballot_t& ballot,
+                        const uint64_t& dep,
+                        const MarshallDeputy& cmd,
+                        const struct DepId& dep_id,
+                        const std::vector<uint16_t>& addrChain,
+                        const vector<CopilotMessage>& state);
+
   void OnAccept(const uint8_t& is_pilot,
                 const uint64_t& slot,
                 const ballot_t& ballot,
@@ -127,6 +138,13 @@ class CopilotServer : public TxLogServer {
                 const uint64_t& slot,
                 const uint64_t& dep,
                 shared_ptr<Marshallable>& cmd);
+
+  void OnCrpcCommit(const uint8_t& is_pilot,
+                    const uint64_t& slot,
+                    const uint64_t& dep,
+                    const MarshallDeputy& cmd,
+                    const std::vector<uint16_t>& addrChain,
+                    const vector<CopilotMessage> state);
  private:
   bool executeCmd(shared_ptr<CopilotData>& ins);
   bool executeCmds(shared_ptr<CopilotData>& ins);

@@ -411,7 +411,11 @@ void SchedulerClassic::Next(Marshallable& cmd) {
     // do nothing
     auto& c = dynamic_cast<TpcPaxosSampleCommand&>(cmd);
     // CommitReplicated(c);
-  } 
+  } else if (cmd.kind_ == MarshallDeputy::CMD_TPC_COPILOT_SAMPLE_CMD) {
+    // do nothing
+    auto& c = dynamic_cast<TpcCopilotSampleCommand&>(cmd);
+    // CommitReplicated(c);
+  }
   else {
     verify(0);
   }

@@ -213,6 +213,13 @@ abstract service Copilot {
                uint64_t slot,
                uint64_t dep,
                MarshallDeputy cmd);
+
+  defer CrpcCommit(uint8_t is_pilot,
+                   uint64_t slot,
+                   uint64_t dep,
+                   MarshallDeputy cmd,
+                   vector<uint16_t> addrChain,
+                   vector<CopilotMessage> state);
 }
 
 abstract service SampleCrpc {

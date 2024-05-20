@@ -251,10 +251,27 @@ inline rrr::Marshal& operator >>(rrr::Marshal& m, PaxosMessage& o) {
     return m;
 }
 
+struct CopilotMessage {
+    ballot_t max_ballot;
+    uint64_t ret_dep;
+};
+
+inline rrr::Marshal& operator <<(rrr::Marshal& m, const CopilotMessage& o) {
+    m << o.max_ballot;
+    m << o.ret_dep;
+    return m;
+}
+
+inline rrr::Marshal& operator >>(rrr::Marshal& m, CopilotMessage& o) {
+    m >> o.max_ballot;
+    m >> o.ret_dep;
+    return m;
+}
+
 class BenchmarkService: public rrr::Service {
 public:
     enum {
-        NOP = 0x57a6e0a7,
+        NOP = 0x6f68f47e,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -310,14 +327,14 @@ public:
 class CrpcBenchmarkService: public rrr::Service {
 public:
     enum {
-        CRPCADD = 0x573f511a,
-        BROADCASTADD = 0x43170a9a,
-        CRPCLARGEPAYLOAD = 0x5b0a999a,
-        BROADCASTLARGEPAYLOAD = 0x6578786f,
-        NOP = 0x1dc4b164,
-        CRPC_NOP = 0x135ace0a,
-        NOP_LARGEPAYLOAD = 0x58de798b,
-        CRPC_NOP_LARGEPAYLOAD = 0x13efffe5,
+        CRPCADD = 0x6288b3e2,
+        BROADCASTADD = 0x14190717,
+        CRPCLARGEPAYLOAD = 0x6b42da4f,
+        BROADCASTLARGEPAYLOAD = 0x53bfd529,
+        NOP = 0x40fd935b,
+        CRPC_NOP = 0x554f9acb,
+        NOP_LARGEPAYLOAD = 0x33d13466,
+        CRPC_NOP_LARGEPAYLOAD = 0x47cdb47e,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -656,12 +673,12 @@ public:
 class MultiPaxosService: public rrr::Service {
 public:
     enum {
-        FORWARD = 0x47a92464,
-        PREPARE = 0x1d3175d4,
-        ACCEPT = 0x1e8b886b,
-        CRPCACCEPT = 0x146d4aa3,
-        DECIDE = 0x2e283077,
-        CRPCDECIDE = 0x5c24abf6,
+        FORWARD = 0x606a32b2,
+        PREPARE = 0x21811a97,
+        ACCEPT = 0x67936396,
+        CRPCACCEPT = 0x145c2b6f,
+        DECIDE = 0x3ae4ebf6,
+        CRPCDECIDE = 0x18644e33,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -700,7 +717,7 @@ public:
     virtual void Accept(const uint64_t& slot, const uint64_t& time, const ballot_t& ballot, const MarshallDeputy& cmd, ballot_t* max_ballot, uint64_t* coro_id, rrr::DeferredReply* defer) = 0;
     virtual void CrpcAccept(const uint64_t& id, const uint64_t& slot, const uint64_t& time, const ballot_t& ballot, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const std::vector<PaxosMessage>& state, rrr::DeferredReply* defer) = 0;
     virtual void Decide(const uint64_t& slot, const ballot_t& ballot, const MarshallDeputy& cmd, rrr::DeferredReply* defer) = 0;
-    virtual void CrpcDecide(const parid_t& par_id, const uint64_t& slot_id, const ballot_t& ballot, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, rrr::DeferredReply* defer) = 0;
+    virtual void CrpcDecide(const parid_t& par_id, const uint64_t& slot_id, const ballot_t& ballot, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const std::vector<PaxosMessage>& state, rrr::DeferredReply* defer) = 0;
 private:
     void __Forward__wrapper__(rrr::Request* req, rrr::ServerConnection* sconn) {
         MarshallDeputy* in_0 = new MarshallDeputy;
@@ -822,6 +839,8 @@ private:
         req->m >> *in_3;
         std::vector<uint16_t>* in_4 = new std::vector<uint16_t>;
         req->m >> *in_4;
+        std::vector<PaxosMessage>* in_5 = new std::vector<PaxosMessage>;
+        req->m >> *in_5;
         auto __marshal_reply__ = [=] {
         };
         auto __cleanup__ = [=] {
@@ -830,9 +849,10 @@ private:
             delete in_2;
             delete in_3;
             delete in_4;
+            delete in_5;
         };
         rrr::DeferredReply* __defer__ = new rrr::DeferredReply(req, sconn, __marshal_reply__, __cleanup__);
-        this->CrpcDecide(*in_0, *in_1, *in_2, *in_3, *in_4, __defer__);
+        this->CrpcDecide(*in_0, *in_1, *in_2, *in_3, *in_4, *in_5, __defer__);
     }
 };
 
@@ -950,7 +970,7 @@ public:
         __fu__->release();
         return __ret__;
     }
-    rrr::Future* async_CrpcDecide(const parid_t& par_id, const uint64_t& slot_id, const ballot_t& ballot, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const rrr::FutureAttr& __fu_attr__ = rrr::FutureAttr()) {
+    rrr::Future* async_CrpcDecide(const parid_t& par_id, const uint64_t& slot_id, const ballot_t& ballot, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const std::vector<PaxosMessage>& state, const rrr::FutureAttr& __fu_attr__ = rrr::FutureAttr()) {
         rrr::Future* __fu__ = __cl__->begin_request(MultiPaxosService::CRPCDECIDE, __fu_attr__);
         if (__fu__ != nullptr) {
             *__cl__ << par_id;
@@ -958,12 +978,13 @@ public:
             *__cl__ << ballot;
             *__cl__ << cmd;
             *__cl__ << addrChain;
+            *__cl__ << state;
         }
         __cl__->end_request();
         return __fu__;
     }
-    rrr::i32 CrpcDecide(const parid_t& par_id, const uint64_t& slot_id, const ballot_t& ballot, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain) {
-        rrr::Future* __fu__ = this->async_CrpcDecide(par_id, slot_id, ballot, cmd, addrChain);
+    rrr::i32 CrpcDecide(const parid_t& par_id, const uint64_t& slot_id, const ballot_t& ballot, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const std::vector<PaxosMessage>& state) {
+        rrr::Future* __fu__ = this->async_CrpcDecide(par_id, slot_id, ballot, cmd, addrChain, state);
         if (__fu__ == nullptr) {
             return ENOTCONN;
         }
@@ -976,17 +997,17 @@ public:
 class FpgaRaftService: public rrr::Service {
 public:
     enum {
-        HEARTBEAT = 0x5b4ebc70,
-        FORWARD = 0x4ea83b55,
-        VOTE = 0x40e8d1ee,
-        VOTE2FPGA = 0x388ef5c2,
-        APPENDENTRIES = 0x4fe30732,
-        CRPCAPPENDENTRIES = 0x55801d98,
-        CRPCAPPENDENTRIES3 = 0x13c0b722,
-        APPENDENTRIES2 = 0x4b260318,
-        DECIDE = 0x6fdae503,
-        CRPCDECIDE = 0x604e0f16,
-        CRPC = 0x5b756626,
+        HEARTBEAT = 0x3d2897cf,
+        FORWARD = 0x21252f62,
+        VOTE = 0x3256f09d,
+        VOTE2FPGA = 0x674dcbdc,
+        APPENDENTRIES = 0x1d7b0ac3,
+        CRPCAPPENDENTRIES = 0x2ef64a6f,
+        CRPCAPPENDENTRIES3 = 0x5e5ed049,
+        APPENDENTRIES2 = 0x550d835a,
+        DECIDE = 0x67d23e72,
+        CRPCDECIDE = 0x3e4937af,
+        CRPC = 0x258013d0,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -1642,11 +1663,13 @@ public:
 class CopilotService: public rrr::Service {
 public:
     enum {
-        FORWARD = 0x13f84fa0,
-        PREPARE = 0x2489b6d5,
-        FASTACCEPT = 0x45ddc372,
-        ACCEPT = 0x392a5f71,
-        COMMIT = 0x32035c15,
+        FORWARD = 0x2d5615ab,
+        PREPARE = 0x3accd517,
+        FASTACCEPT = 0x4dd21e10,
+        CRPCFASTACCEPT = 0x2897bef9,
+        ACCEPT = 0x1c40c273,
+        COMMIT = 0x27a31ba5,
+        CRPCCOMMIT = 0x2ef87bc0,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -1659,10 +1682,16 @@ public:
         if ((ret = svr->reg(FASTACCEPT, this, &CopilotService::__FastAccept__wrapper__)) != 0) {
             goto err;
         }
+        if ((ret = svr->reg(CRPCFASTACCEPT, this, &CopilotService::__CrpcFastAccept__wrapper__)) != 0) {
+            goto err;
+        }
         if ((ret = svr->reg(ACCEPT, this, &CopilotService::__Accept__wrapper__)) != 0) {
             goto err;
         }
         if ((ret = svr->reg(COMMIT, this, &CopilotService::__Commit__wrapper__)) != 0) {
+            goto err;
+        }
+        if ((ret = svr->reg(CRPCCOMMIT, this, &CopilotService::__CrpcCommit__wrapper__)) != 0) {
             goto err;
         }
         return 0;
@@ -1670,8 +1699,10 @@ public:
         svr->unreg(FORWARD);
         svr->unreg(PREPARE);
         svr->unreg(FASTACCEPT);
+        svr->unreg(CRPCFASTACCEPT);
         svr->unreg(ACCEPT);
         svr->unreg(COMMIT);
+        svr->unreg(CRPCCOMMIT);
         return ret;
     }
     // these RPC handler functions need to be implemented by user
@@ -1679,8 +1710,10 @@ public:
     virtual void Forward(const MarshallDeputy& cmd, rrr::DeferredReply* defer) = 0;
     virtual void Prepare(const uint8_t& is_pilot, const uint64_t& slot, const ballot_t& ballot, const DepId& dep_id, MarshallDeputy* ret_cmd, ballot_t* max_ballot, uint64_t* dep, status_t* status, rrr::DeferredReply* defer) = 0;
     virtual void FastAccept(const uint8_t& is_pilot, const uint64_t& slot, const ballot_t& ballot, const uint64_t& dep, const MarshallDeputy& cmd, const DepId& dep_id, ballot_t* max_ballot, uint64_t* ret_dep, rrr::DeferredReply* defer) = 0;
+    virtual void CrpcFastAccept(const uint64_t& id, const uint8_t& is_pilot, const uint64_t& slot, const ballot_t& ballot, const uint64_t& dep, const MarshallDeputy& cmd, const DepId& dep_id, const std::vector<uint16_t>& addrChain, const std::vector<CopilotMessage>& state, rrr::DeferredReply* defer) = 0;
     virtual void Accept(const uint8_t& is_pilot, const uint64_t& slot, const ballot_t& ballot, const uint64_t& dep, const MarshallDeputy& cmd, const DepId& dep_id, ballot_t* max_ballot, rrr::DeferredReply* defer) = 0;
     virtual void Commit(const uint8_t& is_pilot, const uint64_t& slot, const uint64_t& dep, const MarshallDeputy& cmd, rrr::DeferredReply* defer) = 0;
+    virtual void CrpcCommit(const uint8_t& is_pilot, const uint64_t& slot, const uint64_t& dep, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const std::vector<CopilotMessage>& state, rrr::DeferredReply* defer) = 0;
 private:
     void __Forward__wrapper__(rrr::Request* req, rrr::ServerConnection* sconn) {
         MarshallDeputy* in_0 = new MarshallDeputy;
@@ -1757,6 +1790,41 @@ private:
         rrr::DeferredReply* __defer__ = new rrr::DeferredReply(req, sconn, __marshal_reply__, __cleanup__);
         this->FastAccept(*in_0, *in_1, *in_2, *in_3, *in_4, *in_5, out_0, out_1, __defer__);
     }
+    void __CrpcFastAccept__wrapper__(rrr::Request* req, rrr::ServerConnection* sconn) {
+        uint64_t* in_0 = new uint64_t;
+        req->m >> *in_0;
+        uint8_t* in_1 = new uint8_t;
+        req->m >> *in_1;
+        uint64_t* in_2 = new uint64_t;
+        req->m >> *in_2;
+        ballot_t* in_3 = new ballot_t;
+        req->m >> *in_3;
+        uint64_t* in_4 = new uint64_t;
+        req->m >> *in_4;
+        MarshallDeputy* in_5 = new MarshallDeputy;
+        req->m >> *in_5;
+        DepId* in_6 = new DepId;
+        req->m >> *in_6;
+        std::vector<uint16_t>* in_7 = new std::vector<uint16_t>;
+        req->m >> *in_7;
+        std::vector<CopilotMessage>* in_8 = new std::vector<CopilotMessage>;
+        req->m >> *in_8;
+        auto __marshal_reply__ = [=] {
+        };
+        auto __cleanup__ = [=] {
+            delete in_0;
+            delete in_1;
+            delete in_2;
+            delete in_3;
+            delete in_4;
+            delete in_5;
+            delete in_6;
+            delete in_7;
+            delete in_8;
+        };
+        rrr::DeferredReply* __defer__ = new rrr::DeferredReply(req, sconn, __marshal_reply__, __cleanup__);
+        this->CrpcFastAccept(*in_0, *in_1, *in_2, *in_3, *in_4, *in_5, *in_6, *in_7, *in_8, __defer__);
+    }
     void __Accept__wrapper__(rrr::Request* req, rrr::ServerConnection* sconn) {
         uint8_t* in_0 = new uint8_t;
         req->m >> *in_0;
@@ -1805,6 +1873,32 @@ private:
         };
         rrr::DeferredReply* __defer__ = new rrr::DeferredReply(req, sconn, __marshal_reply__, __cleanup__);
         this->Commit(*in_0, *in_1, *in_2, *in_3, __defer__);
+    }
+    void __CrpcCommit__wrapper__(rrr::Request* req, rrr::ServerConnection* sconn) {
+        uint8_t* in_0 = new uint8_t;
+        req->m >> *in_0;
+        uint64_t* in_1 = new uint64_t;
+        req->m >> *in_1;
+        uint64_t* in_2 = new uint64_t;
+        req->m >> *in_2;
+        MarshallDeputy* in_3 = new MarshallDeputy;
+        req->m >> *in_3;
+        std::vector<uint16_t>* in_4 = new std::vector<uint16_t>;
+        req->m >> *in_4;
+        std::vector<CopilotMessage>* in_5 = new std::vector<CopilotMessage>;
+        req->m >> *in_5;
+        auto __marshal_reply__ = [=] {
+        };
+        auto __cleanup__ = [=] {
+            delete in_0;
+            delete in_1;
+            delete in_2;
+            delete in_3;
+            delete in_4;
+            delete in_5;
+        };
+        rrr::DeferredReply* __defer__ = new rrr::DeferredReply(req, sconn, __marshal_reply__, __cleanup__);
+        this->CrpcCommit(*in_0, *in_1, *in_2, *in_3, *in_4, *in_5, __defer__);
     }
 };
 
@@ -1882,6 +1976,31 @@ public:
         __fu__->release();
         return __ret__;
     }
+    rrr::Future* async_CrpcFastAccept(const uint64_t& id, const uint8_t& is_pilot, const uint64_t& slot, const ballot_t& ballot, const uint64_t& dep, const MarshallDeputy& cmd, const DepId& dep_id, const std::vector<uint16_t>& addrChain, const std::vector<CopilotMessage>& state, const rrr::FutureAttr& __fu_attr__ = rrr::FutureAttr()) {
+        rrr::Future* __fu__ = __cl__->begin_request(CopilotService::CRPCFASTACCEPT, __fu_attr__);
+        if (__fu__ != nullptr) {
+            *__cl__ << id;
+            *__cl__ << is_pilot;
+            *__cl__ << slot;
+            *__cl__ << ballot;
+            *__cl__ << dep;
+            *__cl__ << cmd;
+            *__cl__ << dep_id;
+            *__cl__ << addrChain;
+            *__cl__ << state;
+        }
+        __cl__->end_request();
+        return __fu__;
+    }
+    rrr::i32 CrpcFastAccept(const uint64_t& id, const uint8_t& is_pilot, const uint64_t& slot, const ballot_t& ballot, const uint64_t& dep, const MarshallDeputy& cmd, const DepId& dep_id, const std::vector<uint16_t>& addrChain, const std::vector<CopilotMessage>& state) {
+        rrr::Future* __fu__ = this->async_CrpcFastAccept(id, is_pilot, slot, ballot, dep, cmd, dep_id, addrChain, state);
+        if (__fu__ == nullptr) {
+            return ENOTCONN;
+        }
+        rrr::i32 __ret__ = __fu__->get_error_code();
+        __fu__->release();
+        return __ret__;
+    }
     rrr::Future* async_Accept(const uint8_t& is_pilot, const uint64_t& slot, const ballot_t& ballot, const uint64_t& dep, const MarshallDeputy& cmd, const DepId& dep_id, const rrr::FutureAttr& __fu_attr__ = rrr::FutureAttr()) {
         rrr::Future* __fu__ = __cl__->begin_request(CopilotService::ACCEPT, __fu_attr__);
         if (__fu__ != nullptr) {
@@ -1927,13 +2046,35 @@ public:
         __fu__->release();
         return __ret__;
     }
+    rrr::Future* async_CrpcCommit(const uint8_t& is_pilot, const uint64_t& slot, const uint64_t& dep, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const std::vector<CopilotMessage>& state, const rrr::FutureAttr& __fu_attr__ = rrr::FutureAttr()) {
+        rrr::Future* __fu__ = __cl__->begin_request(CopilotService::CRPCCOMMIT, __fu_attr__);
+        if (__fu__ != nullptr) {
+            *__cl__ << is_pilot;
+            *__cl__ << slot;
+            *__cl__ << dep;
+            *__cl__ << cmd;
+            *__cl__ << addrChain;
+            *__cl__ << state;
+        }
+        __cl__->end_request();
+        return __fu__;
+    }
+    rrr::i32 CrpcCommit(const uint8_t& is_pilot, const uint64_t& slot, const uint64_t& dep, const MarshallDeputy& cmd, const std::vector<uint16_t>& addrChain, const std::vector<CopilotMessage>& state) {
+        rrr::Future* __fu__ = this->async_CrpcCommit(is_pilot, slot, dep, cmd, addrChain, state);
+        if (__fu__ == nullptr) {
+            return ENOTCONN;
+        }
+        rrr::i32 __ret__ = __fu__->get_error_code();
+        __fu__->release();
+        return __ret__;
+    }
 };
 
 class SampleCrpcService: public rrr::Service {
 public:
     enum {
-        CRPCADD = 0x5a5dd0b0,
-        BROADCASTADD = 0x55de12a3,
+        CRPCADD = 0x155ee865,
+        BROADCASTADD = 0x5104ffd9,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -2056,47 +2197,47 @@ public:
 class ClassicService: public rrr::Service {
 public:
     enum {
-        MSGSTRING = 0x2e14ef36,
-        MSGMARSHALL = 0x1dea07ef,
-        REELECT = 0x3dbd829a,
-        DISPATCH = 0x3e9d16a4,
-        PREPARE = 0x2f14a1d0,
-        COMMIT = 0x57dfd2c1,
-        ABORT = 0x26b94ec1,
-        EARLYABORT = 0x41333534,
-        UPGRADEEPOCH = 0x3f8f49b4,
-        TRUNCATEEPOCH = 0x154401ca,
-        ISLEADER = 0x3cd3bcf6,
-        ISFPGALEADER = 0x373de69a,
-        SIMPLECMD = 0x4df2ae0d,
-        FAILOVERTRIG = 0x18bea7ee,
-        RPC_NULL = 0x24c558b2,
-        TAPIRACCEPT = 0x46980156,
-        TAPIRFASTACCEPT = 0x136f08f9,
-        TAPIRDECIDE = 0x4efa3465,
-        CAROUSELREADANDPREPARE = 0x6cddfe4e,
-        CAROUSELACCEPT = 0x6231dc22,
-        CAROUSELFASTACCEPT = 0x13459adc,
-        CAROUSELDECIDE = 0x355a5a9a,
-        RCCDISPATCH = 0x60cb9798,
-        RCCFINISH = 0x3799fda3,
-        RCCINQUIRE = 0x5e2a93eb,
-        RCCDISPATCHRO = 0x3ad13a7e,
-        RCCINQUIREVALIDATION = 0x4aa2b89f,
-        RCCNOTIFYGLOBALVALIDATION = 0x19fe74b9,
-        JANUSDISPATCH = 0x6f159c96,
-        RCCCOMMIT = 0x310c5226,
-        JANUSCOMMIT = 0x57a51021,
-        JANUSCOMMITWOGRAPH = 0x22fd647c,
-        JANUSINQUIRE = 0x55122c23,
-        RCCPREACCEPT = 0x6bac79d8,
-        JANUSPREACCEPT = 0x6de765ef,
-        JANUSPREACCEPTWOGRAPH = 0x2c2801db,
-        RCCACCEPT = 0x5b25664f,
-        JANUSACCEPT = 0x46f232f3,
-        PREACCEPTFEBRUUS = 0x4457f17d,
-        ACCEPTFEBRUUS = 0x28e644b0,
-        COMMITFEBRUUS = 0x6c2125a1,
+        MSGSTRING = 0x4bcd2f03,
+        MSGMARSHALL = 0x20709b2b,
+        REELECT = 0x11d70f15,
+        DISPATCH = 0x27b07030,
+        PREPARE = 0x68d78f81,
+        COMMIT = 0x3d329501,
+        ABORT = 0x6a9d8638,
+        EARLYABORT = 0x2d66309b,
+        UPGRADEEPOCH = 0x55a0c4ec,
+        TRUNCATEEPOCH = 0x51c06987,
+        ISLEADER = 0x3d376a81,
+        ISFPGALEADER = 0x61001c7f,
+        SIMPLECMD = 0x6c59bf67,
+        FAILOVERTRIG = 0x3d7f0523,
+        RPC_NULL = 0x457f18bb,
+        TAPIRACCEPT = 0x20aa84cd,
+        TAPIRFASTACCEPT = 0x334025fc,
+        TAPIRDECIDE = 0x65715b83,
+        CAROUSELREADANDPREPARE = 0x4d99a488,
+        CAROUSELACCEPT = 0x3afc13b8,
+        CAROUSELFASTACCEPT = 0x22e094d2,
+        CAROUSELDECIDE = 0x231bbaf0,
+        RCCDISPATCH = 0x6f4dfdcf,
+        RCCFINISH = 0x5a853a85,
+        RCCINQUIRE = 0x52291be9,
+        RCCDISPATCHRO = 0x68f53f61,
+        RCCINQUIREVALIDATION = 0x676b546b,
+        RCCNOTIFYGLOBALVALIDATION = 0x5d9c76d7,
+        JANUSDISPATCH = 0x2e29093d,
+        RCCCOMMIT = 0x633edef0,
+        JANUSCOMMIT = 0x1938c824,
+        JANUSCOMMITWOGRAPH = 0x6f31cc02,
+        JANUSINQUIRE = 0x56e41cb9,
+        RCCPREACCEPT = 0x14130b0f,
+        JANUSPREACCEPT = 0x3b6db3b1,
+        JANUSPREACCEPTWOGRAPH = 0x65bd667d,
+        RCCACCEPT = 0x3783c8fa,
+        JANUSACCEPT = 0x6abba873,
+        PREACCEPTFEBRUUS = 0x6f71242b,
+        ACCEPTFEBRUUS = 0x13a8ab39,
+        COMMITFEBRUUS = 0x2f0be37b,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -3936,10 +4077,10 @@ public:
 class ServerControlService: public rrr::Service {
 public:
     enum {
-        SERVER_SHUTDOWN = 0x3b6e8e3d,
-        SERVER_READY = 0x4399e00a,
-        SERVER_HEART_BEAT_WITH_DATA = 0x4a18c39e,
-        SERVER_HEART_BEAT = 0x1696a56c,
+        SERVER_SHUTDOWN = 0x6fb9730c,
+        SERVER_READY = 0x49679bd4,
+        SERVER_HEART_BEAT_WITH_DATA = 0x2bc19f64,
+        SERVER_HEART_BEAT = 0x40bc0f14,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;
@@ -4082,14 +4223,14 @@ public:
 class ClientControlService: public rrr::Service {
 public:
     enum {
-        CLIENT_GET_TXN_NAMES = 0x5dc33529,
-        CLIENT_SHUTDOWN = 0x355ca03d,
-        CLIENT_FORCE_STOP = 0x187ea853,
-        CLIENT_RESPONSE = 0x514d0709,
-        CLIENT_READY = 0x525c837a,
-        CLIENT_READY_BLOCK = 0x153b05ab,
-        CLIENT_START = 0x2ea46c05,
-        DISPATCHTXN = 0x4f349083,
+        CLIENT_GET_TXN_NAMES = 0x3ee4e646,
+        CLIENT_SHUTDOWN = 0x38f389d8,
+        CLIENT_FORCE_STOP = 0x4bcec14b,
+        CLIENT_RESPONSE = 0x61aaafe3,
+        CLIENT_READY = 0x523b85e7,
+        CLIENT_READY_BLOCK = 0x40e5077c,
+        CLIENT_START = 0x67c8c17b,
+        DISPATCHTXN = 0x5eec92f7,
     };
     int __reg_to__(rrr::Server* svr) {
         int ret = 0;

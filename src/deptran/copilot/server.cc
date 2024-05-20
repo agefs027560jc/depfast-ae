@@ -1,6 +1,7 @@
 #include "server.h"
 #include "frame.h"
 #include "coordinator.h"
+#include "commo.h"
 
 // #define DEBUG
 #define WAIT_AT_UNCOMMIT
@@ -341,6 +342,120 @@ void CopilotServer::OnFastAccept(const uint8_t& is_pilot,
   }
 }
 
+void CopilotServer::OnCrpcFastAccept(const uint64_t& id,
+                                     const uint8_t& is_pilot,
+                                     const uint64_t& slot,
+                                     const ballot_t& ballot,
+                                     const uint64_t& dep,
+                                     const MarshallDeputy& cmd,
+                                     const struct DepId& dep_id,
+                                     const std::vector<uint16_t>& addrChain,
+                                     const vector<CopilotMessage>& state) {
+  // TODO: deal with ballot
+  std::lock_guard<std::recursive_mutex> lock(mtx_);
+  int n = Config::GetConfig()->GetPartitionSize(0);
+  int q = n / 2;
+  Log_debug("server %d [FAST_ACCEPT] %s : %lu -> %lu", id_, toString(is_pilot), slot, dep);
+
+  if(addrChain.size() == 1) {
+    auto x = (CopilotCommo *)(this->commo_);
+    auto it = x->cRPCEvents.find(id);
+    if(it == x->cRPCEvents.end()) return;
+    auto ev = it->second;
+    x->cRPCEvents.erase(it);
+
+    for(auto el: state) {
+      ev->FeedResponse(true, true);
+      ev->FeedRetDep(el.ret_dep);
+    }
+
+    return;
+  }
+
+  auto ins = GetInstance(slot, is_pilot);
+  verify(ins);
+  log_infos_[is_pilot].current_slot = std::max(slot, log_infos_[is_pilot].current_slot);
+  auto& log_info = log_infos_[REVERSE(is_pilot)];
+  auto& logs = log_info.logs;
+  uint64_t suggest_dep = dep;
+
+  /**
+   * Thus, the check only needs to look at later entries in the other
+   * pilot’s log. The compatibility check passes unless the replica
+   * has already accepted a later entry P'.k (k > j) from the other
+   * pilot P0 with a dependency earlier than P.i, i.e., P'.k’s dependency
+   * is < P.i.
+   * 
+   * 
+   */
+  if (likely(dep != 0)) {
+    for (slotid_t j = dep + 1; j <= log_info.max_accepted_slot; j++) {
+      // if (!logs[j])
+      //   Log_fatal("slot %lu max acpt %lu", j, log_info.max_accepted_slot);
+      // auto dep_id = logs[j]->dep_id;
+      auto it = logs.find(j);
+      if (unlikely(it == logs.end()))
+        continue;
+      auto dep_id = it->second->dep_id;
+      if (dep_id != 0 && dep_id < slot) {
+        // if (GetInstance(dep_id, is_pilot)->status == Status::EXECUTED &&
+        //     logs[dep]->status == Status::EXECUTED)
+        //   continue;
+        /**
+         * Otherwise, it sends a FastAcceptReply message to the pilot
+         * with its latest entry for the other pilot, P'.k,
+         * as its suggested dependency.
+         * //TODO: definition on "latest"
+         */
+        suggest_dep = log_info.max_accepted_slot;
+        Log_debug("copilot server %d find imcompatiable dependence for %s : ", "%lu -> %lu. suggest dep: %lu", id_, toString(is_pilot), slot, dep, suggest_dep);
+        break;
+      }
+    }
+  }
+
+  if (ins->ballot <= ballot) {
+    ins->ballot = ballot;
+    ins->dep_id = dep;
+    ins->cmd = const_cast<MarshallDeputy&>(cmd).sp_data_;
+    // still set the cmd here, to prevent PREPARE from getting an empty cmd
+    ins->status = Status::FAST_ACCEPTED;
+    if (suggest_dep == dep) {
+      ins->status = Status::FAST_ACCEPTED_EQ;
+      updateMaxAcptSlot(log_infos_[is_pilot], slot);
+    }
+  } else {
+    // TODO
+  }
+
+  CopilotMessage cm;
+  cm.max_ballot = ballot;
+  cm.ret_dep = suggest_dep;
+
+  vector<uint16_t> addrChainCopy(addrChain.begin() + 1, addrChain.end());
+  std::vector<CopilotMessage> st(state);
+  st.push_back(cm);
+
+  // std::vector<CopilotMessage> st;
+  // st.reserve(state.size()+1);
+  // st.insert(st.end(), state.begin(), state.end());
+  // st.emplace_back(std::move(cm));
+
+  // vector<uint16_t> addrChainCopy;
+  // addrChainCopy.reserve(addrChain.size() - 1);  // Reserve space to avoid reallocation
+  // std::copy(addrChain.begin() + 1, addrChain.end(), std::back_inserter(addrChainCopy));
+
+  // if(st.size() == q) {
+  //     auto empty_cmd = std::make_shared<TpcEmptyCommand>();
+  //     auto sp_m = dynamic_pointer_cast<Marshallable>(empty_cmd);
+  //     MarshallDeputy md(sp_m);
+  //     auto temp_addrChain = vector<uint16_t>{addrChainCopy.back()};
+  //     ((CopilotCommo *)(this->commo_))->CrpcProxyFastAccept(id, is_pilot, slot, ballot, dep, md, dep_id, temp_addrChain, st);
+  // }
+
+  ((CopilotCommo *)(this->commo_))->CrpcProxyFastAccept(id, is_pilot, slot, ballot, dep, cmd, dep_id, addrChainCopy, st);
+}
+
 void CopilotServer::OnAccept(const uint8_t& is_pilot,
                              const uint64_t& slot,
                              const ballot_t& ballot,
@@ -457,6 +572,123 @@ void CopilotServer::OnCommit(const uint8_t& is_pilot,
   }
   log_info.min_active_slot = i;
   // Log_info("server %d [COMMIT     ] %s : %ld -> %ld finish", id_, toString(is_pilot), slot, dep);
+}
+
+void CopilotServer::OnCrpcCommit(const uint8_t& is_pilot,
+                                 const uint64_t& slot,
+                                 const uint64_t& dep,
+                                 const MarshallDeputy& cmd,
+                                 const std::vector<uint16_t>& addrChain,
+                                 const vector<CopilotMessage> state) {
+  std::lock_guard<std::recursive_mutex> lock(mtx_);
+  int n = Config::GetConfig()->GetPartitionSize(0);
+  int q = n / 2;
+  Log_debug("server %d [COMMIT     ] %s : %ld -> %ld", id_, toString(is_pilot), slot, dep);
+
+  if (addrChain.size() == 1) return;
+
+  auto ins = GetInstance(slot, is_pilot);
+  log_infos_[is_pilot].current_slot = std::max(slot, log_infos_[is_pilot].current_slot);
+  if (!ins)
+    return;
+  verify(ins);
+  if (GET_STATUS(ins->status) >= Status::COMMITED) {
+    /**
+     * This case only happens when: this instance is fast-takovered on
+     * another server and that server sent a COMMIT for that instance
+     * to all replicas
+     * 
+     * We can return even if it's committed but yet executed, since a committed
+     * command is bound to get executed.
+     */
+    return;
+  }
+  
+  ins->cmd = const_cast<MarshallDeputy&>(cmd).sp_data_;
+  ins->status = Status::COMMITED;
+#ifdef WAIT_AT_UNCOMMIT
+  ins->cmit_evt.Set(1);
+#endif
+
+  auto& log_info = log_infos_[is_pilot];
+  auto& another_log_info = log_infos_[REVERSE(is_pilot)];
+  updateMaxCmtdSlot(log_info, slot);
+  // verify(slot > log_info.max_executed_slot);
+
+#ifndef WAIT_AT_UNCOMMIT
+  /**
+   * Q: should we execute commands here?
+   * A: We may use another threads to execute the commands,
+   * but for better programbility and understandability,
+   * we should execute cmds here
+   */
+  /**
+   * @Xuhao's note:
+   * We should not only execute the committed cmd here, but also try to execute
+   * cmds in both logs up-to max committed index. Cases are that later cmds have
+   * committed before this cmd, and fail to execute due to this cmd had not been
+   * committed at that time. The commit of this cmd makes executing later cmd possible.
+   * 
+   * If a cmd is committed but fail to execute due to uncommitted dependency, one way
+   * for it to execute eventually is by executing a later cmd, which will execute all
+   * cmds before it according to the order requirement. But a later cmd may not be
+   * proposed if client is blocked and stop issuing new cmds. Thus the only way to
+   * execute it in this case is to execute it when its dependent cmd commits, which is
+   * bound to happen.
+   */
+  for (slotid_t i = slot; i <= log_info.max_committed_slot; i++) {
+    auto is = GetInstance(i, is_pilot);
+    executeCmds(is);
+  }
+  for (slotid_t i = std::max(dep, another_log_info.max_executed_slot + 1);
+       i <= another_log_info.max_committed_slot; i++) {
+    auto is = GetInstance(i, REVERSE(is_pilot));
+    executeCmds(is);
+  }
+#else
+#ifdef DEBUG
+    executeCmd(ins);
+#else
+    executeCmds(ins); // log entry must be executed when return, otherwise deadlock may happen
+#endif
+#endif
+
+  // TODO: should support snapshot for freeing memory.
+  // for now just free anything 1000 slots before.
+  int i = log_info.min_active_slot;
+  while (i + N_CMD_KEEP < log_info.max_executed_slot) {
+    // remove unused cmds. a removed cmd must have been executed.
+    removeCmd(log_info, i++);
+  }
+  log_info.min_active_slot = i;
+  // Log_info("server %d [COMMIT     ] %s : %ld -> %ld finish", id_, toString(is_pilot), slot, dep);
+  
+
+  CopilotMessage cm;
+
+  vector<uint16_t> addrChainCopy(addrChain.begin() + 1, addrChain.end());
+  std::vector<CopilotMessage> st(state);
+  st.push_back(cm);
+
+  // std::vector<CopilotMessage> st;
+  // st.reserve(state.size()+1);
+  // st.insert(st.end(), state.begin(), state.end());
+  // st.emplace_back(std::move(cm));
+
+  // vector<uint16_t> addrChainCopy;
+  // addrChainCopy.reserve(addrChain.size() - 1);  // Reserve space to avoid reallocation
+  // std::copy(addrChain.begin() + 1, addrChain.end(), std::back_inserter(addrChainCopy));
+
+  // if(st.size() == q) {
+  //   auto empty_cmd = std::make_shared<TpcEmptyCommand>();
+  //   auto sp_m = dynamic_pointer_cast<Marshallable>(empty_cmd);
+  //   MarshallDeputy md(sp_m);
+  //   auto temp_addrChain = vector<uint16_t>{addrChainCopy.back()};
+  //   ((CopilotCommo *)(this->commo_))->CrpcProxyCommit(is_pilot, slot, dep, md, temp_addrChain, st);
+  // }
+
+  ((CopilotCommo *)(this->commo_))->CrpcProxyCommit(is_pilot, slot, dep, cmd, addrChainCopy, st);
+
 }
 
 void CopilotServer::setIsPilot(bool isPilot) {

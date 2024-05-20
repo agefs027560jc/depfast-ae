@@ -42,6 +42,17 @@ class CopilotServiceImpl : public CopilotService {
                   uint64_t* ret_dep,
                   rrr::DeferredReply* defer) override;
 
+  void CrpcFastAccept(const uint64_t& id,
+                      const uint8_t& is_pilot,
+                      const uint64_t& slot,
+                      const ballot_t& ballot,
+                      const uint64_t& dep,
+                      const MarshallDeputy& cmd,
+                      const struct DepId& dep_id,
+                      const std::vector<uint16_t>& addrChain,
+                      const vector<CopilotMessage>& state,
+                      rrr::DeferredReply* defer) override;
+
   void Accept(const uint8_t& is_pilot,
               const uint64_t& slot,
               const ballot_t& ballot,
@@ -56,6 +67,14 @@ class CopilotServiceImpl : public CopilotService {
               const uint64_t& dep,
               const MarshallDeputy& cmd,
               rrr::DeferredReply* defer) override;
+
+  void CrpcCommit(const uint8_t& is_pilot,
+                  const uint64_t& slot,
+                  const uint64_t& dep,
+                  const MarshallDeputy& cmd,
+                  const std::vector<uint16_t>& addrChain,
+                  const vector<CopilotMessage>& state,
+                  rrr::DeferredReply* defer) override;
 };
 
 } // namespace janus
